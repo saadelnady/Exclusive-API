@@ -27,7 +27,7 @@ const register = asyncWrapper(async (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
   const oldUser = await User.findOne({ email: email });
   if (oldUser) {
     const error = appError.create(
@@ -41,9 +41,9 @@ const register = asyncWrapper(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   //genereate token
-  const token = await generateToken({ name, email });
+  const token = await generateToken({ name, email, role });
 
-  const newUser = new User({ name, email, password: hashedPassword });
+  const newUser = new User({ name, email, password: hashedPassword, role });
   newUser.token = token;
   await newUser.save();
   res
@@ -73,6 +73,7 @@ const login = asyncWrapper(async (req, res, next) => {
     const token = await generateToken({
       id: user._id,
       name: user.name,
+      role: user.role,
     });
     user.token = token;
     return res.status(200).json({

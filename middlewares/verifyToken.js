@@ -4,7 +4,8 @@ const httpStatusText = require("../utils/utils");
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization.split(" ")[1];
+  const authHeaders = req.headers.authorization || req.headers.Authorization;
+  const token = authHeaders.split(" ")[1];
 
   if (!token) {
     const error = appError.create(
@@ -16,7 +17,8 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    jwt.verify(token, process.env.jwt_secret_key);
+    const currentUser = jwt.verify(token, process.env.jwt_secret_key);
+    req.currentUser = currentUser;
     next();
   } catch (err) {
     const error = appError.create("invalid token", 400, httpStatusText.ERROR);
