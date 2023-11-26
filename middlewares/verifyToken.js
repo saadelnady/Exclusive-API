@@ -22,7 +22,7 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (err) {
     const error = appError.create("invalid token", 400, httpStatusText.ERROR);
-    console.log(error);
+
     return next(error);
   }
 };

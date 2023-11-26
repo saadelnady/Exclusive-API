@@ -2,8 +2,6 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 
 module.exports = (...roles) => {
-  console.log(roles);
-
   return (req, res, next) => {
     const currentUserRole = req.currentUser.role;
     if (!roles.includes(currentUserRole)) {
