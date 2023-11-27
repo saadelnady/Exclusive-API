@@ -2,7 +2,10 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema({
   productName: { type: String, required: true },
-  productImage: { type: String, default: "uploads/default-product.png" },
+  productImage: {
+    type: String,
+    default: "uploads/products/product-default.png",
+  },
   productDescription: { type: String, required: true },
   productColor: { type: String },
   productSize: { type: String, enum: ["XS", "S", "M", "L", "XL"] },

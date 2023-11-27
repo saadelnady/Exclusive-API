@@ -10,7 +10,15 @@ const mongoose = require("mongoose");
 
 app.use(express.json());
 app.use(cors());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads/users",
+  express.static(path.join(__dirname, "uploads/users"))
+);
+app.use(
+  "/uploads/products",
+  express.static(path.join(__dirname, "uploads/products"))
+);
+
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 // wild card

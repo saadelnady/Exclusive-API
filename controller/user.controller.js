@@ -1,11 +1,42 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+
 const User = require("../models/user.model");
 const asyncWrapper = require("../middlewares/asyncWrapper");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
+const multer = require("multer");
+const { json } = require("express");
+
+const diskStorage = multer.diskStorage({
+  // choose images file direction
+  destination: function (req, file, cb) {
+    cb(null, "uploads/users");
+  },
+  filename: function (req, file, cb) {
+    // get img extention
+    const extention = file.mimetype.split("/")[1];
+
+    // handle image to make it unique handle every img extention
+    const fileName = `product-${Date.now()}.${extention}`;
+    cb(null, fileName);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  // check the type of uploaded file is an image
+  const imageType = file.mimetype.split("/")[0];
+  if (imageType === "image") {
+    return cb(null, true);
+  } else {
+    return cb(
+      appError.create("this file must be an image", 400, httpStatusText.FAIL),
+      false
+    );
+  }
+};
+const upload = multer({ storage: diskStorage, fileFilter });
 
 const getAllUsers = asyncWrapper(async (req, res, next) => {
   const users = await User.find({}, { __v: false, password: false });
@@ -22,12 +53,28 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: { users } });
 });
 
+const getUser = asyncWrapper(async (req, res, next) => {
+  const { userId } = req.params;
+  console.log(" userId ===> ", userId);
+  const targetUser = await User.findById(userId);
+  if (!targetUser) {
+    const error = appError.create("user not found", 404, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  console.log("targetUser =====>", targetUser);
+
+  return res
+    .status(200)
+    .json({ status: httpStatusText.SUCCESS, data: { user: targetUser } });
+});
+
 const register = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  const { name, email, password, role } = req.body;
+  const { firstName, lastName, email, password, role, mobile } = req.body;
   const oldUser = await User.findOne({ email: email });
   if (oldUser) {
     const error = appError.create(
@@ -41,9 +88,16 @@ const register = asyncWrapper(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   //genereate token
-  const token = await generateToken({ name, email, role });
+  const token = await generateToken({ firstName, lastName, email, role });
 
-  const newUser = new User({ name, email, password: hashedPassword, role });
+  const newUser = new User({
+    firstName,
+    lastName,
+    email,
+    mobile,
+    password: hashedPassword,
+    role,
+  });
   newUser.token = token;
   await newUser.save();
   res
@@ -72,7 +126,8 @@ const login = asyncWrapper(async (req, res, next) => {
   if (user && matchedPassword) {
     const token = await generateToken({
       id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
     });
     user.token = token;
@@ -90,4 +145,4 @@ const login = asyncWrapper(async (req, res, next) => {
   }
 });
 
-module.exports = { getAllUsers, register, login };
+module.exports = { getAllUsers, getUser, register, login };

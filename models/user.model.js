@@ -1,12 +1,19 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const userRoles = require("../utils/user.roles");
+
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
     type: String,
     required: true,
   },
-
+  lastName: {
+    type: String,
+    required: true,
+  },
+  userImage: { type: String, default: "uploads/users/user-default.png" },
+  mobile: { type: String, unique: true, required: true },
+  address: { type: String },
   email: {
     type: String,
     validator: [validator.isEmail, "Email must be valid email"],

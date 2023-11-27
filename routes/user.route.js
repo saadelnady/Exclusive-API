@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getAllUsers,
+  getUser,
   register,
   login,
 } = require("../controller/user.controller");
@@ -15,6 +16,9 @@ const router = express.Router();
 router
   .route("/")
   .get(verifyToken, alloewdTo(userRoles.ADMIN, userRoles.MANGER), getAllUsers);
+
+router.route("/:userId").get(getUser);
+
 router.route("/register").post(registerValidation(), register);
 router.route("/login").post(loginValidation(), login);
 
