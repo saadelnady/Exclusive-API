@@ -4,14 +4,14 @@ const registerValidation = () => {
     body("firstName")
       .notEmpty()
       .withMessage("first name is required")
-      .isLength({ min: 3, max: 15 })
-      .withMessage("name must be  at least 3 chars or 15 chars maximum"),
+      .isLength({ min: 3, max: 10 })
+      .withMessage("name must be  at least 3 chars or 10 chars maximum"),
 
     body("lastName")
       .notEmpty()
       .withMessage("last name is required")
-      .isLength({ min: 3, max: 15 })
-      .withMessage("name must be  at least 3 chars or 15 chars maximum"),
+      .isLength({ min: 3, max: 10 })
+      .withMessage("name must be  at least 3 chars or 10 chars maximum"),
 
     body("email")
       .notEmpty()
@@ -24,6 +24,7 @@ const registerValidation = () => {
       .withMessage("password is required")
       .isLength({ min: 9, max: 25 })
       .withMessage("password length must between 9 and 25 characters "),
+
     body("mobile")
       .notEmpty()
       .withMessage("mobile phone is required")
