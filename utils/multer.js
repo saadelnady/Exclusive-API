@@ -1,4 +1,6 @@
 const multer = require("multer");
+const appError = require("./appError");
+const httpStatusText = require("../utils/utils");
 const configureMulter = (folderName) => {
   const storage = multer.diskStorage({
     // choose file direction based on folderName
@@ -19,7 +21,7 @@ const configureMulter = (folderName) => {
       cb(null, fileName);
     },
   });
-  return storage
+  return storage;
 };
 
 const fileFilter = (req, file, cb) => {

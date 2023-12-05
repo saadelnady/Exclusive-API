@@ -8,38 +8,11 @@ const {
   deleteProduct,
 } = require("../controller/product.controller");
 const productValidation = require("../middlewares/productValidation");
-const appError = require("../utils/appError");
-const httpStatusText = require("../utils/utils");
+const { configureMulter, fileFilter } = require("../utils/multer");
+
 const multer = require("multer");
 
-const diskStorage = multer.diskStorage({
-  // choose images file direction
-  destination: function (req, file, cb) {
-    cb(null, "uploads/products");
-  },
-  filename: function (req, file, cb) {
-    // get img extention
-    const extention = file.mimetype.split("/")[1];
-
-    // handle image to make it unique handle every img extention
-    const fileName = `product-${Date.now()}.${extention}`;
-    cb(null, fileName);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  // check the type of uploaded file is an image
-  const imageType = file.mimetype.split("/")[0];
-  if (imageType === "image") {
-    return cb(null, true);
-  } else {
-    return cb(
-      appError.create("this file must be an image", 400, httpStatusText.FAIL),
-      false
-    );
-  }
-};
-const upload = multer({ storage: diskStorage, fileFilter });
+const upload = multer({ storage: configureMulter("products"), fileFilter });
 
 const Router = express.Router();
 

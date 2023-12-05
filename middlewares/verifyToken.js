@@ -1,16 +1,17 @@
-require("dotenv").config();
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
-  const authHeaders = req.headers.authorization || req.headers.Authorization;
-  const token = authHeaders.split(" ")[1];
+  // const authHeaders = req.headers.authorization || req.headers.Authorization;
 
+  // const token = authHeaders.split(" ")[1];
+  const token = req.body.activationToken || req.headers.token;
+  // console.log("token ====>", token);
   if (!token) {
     const error = appError.create(
-      "token is required",
-      400,
+      "Please , login to continue",
+      401,
       httpStatusText.FAIL
     );
     return next(error);

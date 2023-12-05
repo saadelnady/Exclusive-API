@@ -25,7 +25,7 @@ const registerValidation = () => {
       .isLength({ min: 9, max: 25 })
       .withMessage("password length must between 9 and 25 characters "),
 
-    body("mobile")
+    body("mobilePhone")
       .notEmpty()
       .withMessage("mobile phone is required")
       .isMobilePhone("any")

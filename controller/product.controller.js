@@ -3,6 +3,10 @@ const asyncWrapper = require("../middlewares/asyncWrapper");
 const product = require("../models/product.model");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
+const { configureMulter, fileFilter } = require("../utils/multer");
+const multer = require("multer");
+
+const upload = multer({ storage: configureMulter("products"), fileFilter });
 
 const getAllProducts = asyncWrapper(async (req, res, next) => {
   const products = await product.find();
@@ -29,7 +33,6 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
   const newProduct = new product({ ...req.body });
   newProduct.productImage = req.file.filename;
-  newProduct.save();
   return res
     .status(201)
     .json({ status: httpStatusText.SUCCESS, data: { product: newProduct } });
