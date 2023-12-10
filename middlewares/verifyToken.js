@@ -7,7 +7,6 @@ const verifyToken = (req, res, next) => {
 
   // const token = authHeaders.split(" ")[1];
   const token = req.body.activationToken || req.headers.token;
-  // console.log("token ====>", token);
   if (!token) {
     const error = appError.create(
       "Please , login to continue",

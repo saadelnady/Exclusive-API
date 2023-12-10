@@ -9,14 +9,8 @@ const app = express();
 
 const dbConnection = require("./db/dataBase");
 const errorHandler = require("./middlewares/errorHandler");
-const verifyToken = require("./middlewares/verifyToken");
 
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 app.use(
   "/uploads/users",
@@ -29,6 +23,7 @@ app.use(
 
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
+
 // wild card
 app.all("*", (req, res, next) => {
   res.status(400).json({ message: "not found your request" });

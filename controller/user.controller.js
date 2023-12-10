@@ -1,10 +1,8 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
-
 const User = require("../models/user.model");
 const asyncWrapper = require("../middlewares/asyncWrapper");
 const appError = require("../utils/appError");
-
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
@@ -55,7 +53,7 @@ const getProfile = asyncWrapper(async (req, res, next) => {
     const error = appError.create("user not found", 404, httpStatusText.FAIL);
     return next(error);
   }
-
+  targetUser.userImage = `${process.env.BAIS_URL}/${targetUser.userImage}`;
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { user: targetUser } });
@@ -92,7 +90,6 @@ const register = asyncWrapper(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   //genereate token
-  const token = await generateToken({ firstName, lastName, email, role });
 
   const newUser = new User({
     firstName,
@@ -102,9 +99,17 @@ const register = asyncWrapper(async (req, res, next) => {
     password: hashedPassword,
     role,
   });
+  const token = await generateToken({
+    firstName,
+    lastName,
+    email,
+    id: newUser._id,
+    role: newUser.role,
+  });
 
   newUser.token = token;
   await newUser.save();
+
   const activationUrl = `${process.env.BAIS_URL}/activation/${newUser.token}`;
 
   await sendEmail({
@@ -112,6 +117,7 @@ const register = asyncWrapper(async (req, res, next) => {
     subject: "Activate your account",
     message: `Hello ${newUser.firstName} , please click on the link to activate your account ${activationUrl}`,
   });
+
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
     data: { user: newUser },
@@ -140,6 +146,7 @@ const login = asyncWrapper(async (req, res, next) => {
     const token = await generateToken({
       id: user._id,
       firstName: user.firstName,
+      email: user.email,
       lastName: user.lastName,
       role: user.role,
     });
