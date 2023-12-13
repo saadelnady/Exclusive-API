@@ -99,7 +99,7 @@ const register = asyncWrapper(async (req, res, next) => {
     password: hashedPassword,
     role,
   });
-  const token = await generateToken({
+  const token = generateToken({
     firstName,
     lastName,
     email,
@@ -143,7 +143,7 @@ const login = asyncWrapper(async (req, res, next) => {
   const matchedPassword = await bcrypt.compare(password, user.password);
 
   if (user && matchedPassword) {
-    const token = await generateToken({
+    const token = generateToken({
       id: user._id,
       firstName: user.firstName,
       email: user.email,
