@@ -24,6 +24,7 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
 
 const updateUser = asyncWrapper(async (req, res, next) => {
   const { userId } = req.params;
+  console.log(userId);
   const targetUser = await User.findById(userId);
   if (!targetUser) {
     const error = appError.create("user not found", 400, httpStatusText.FAIL);
@@ -40,7 +41,10 @@ const updateUser = asyncWrapper(async (req, res, next) => {
     },
     options
   );
+  console.log(req.file.filename);
   updatedUser.userImage = req.file.filename;
+  console.log("===========", updatedUser.userImage);
+
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { user: updatedUser } });

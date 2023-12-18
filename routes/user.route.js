@@ -25,7 +25,11 @@ router
   .get(verifyToken, alloewdTo(userRoles.ADMIN, userRoles.MANGER), getAllUsers);
 
 router.route("/activation").post(verifyToken, activateUser);
-router.put(upload.single("userImage"), updateUser).delete(deleteUser);
+router
+  .route("/:userId")
+  .put(upload.single("userImage"), updateUser)
+  .delete(deleteUser);
+
 router.route("/getProfile").get(verifyToken, getProfile);
 
 router.route("/register").post(registerValidation(), register);
