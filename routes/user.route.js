@@ -2,8 +2,8 @@ const express = require("express");
 const {
   getAllUsers,
   getProfile,
-  register,
-  login,
+  userRegister,
+  userLogin,
   updateUser,
   deleteUser,
   activateUser,
@@ -20,9 +20,7 @@ const { configureMulter, fileFilter } = require("../utils/multer");
 const router = express.Router();
 
 const upload = multer({ storage: configureMulter("users"), fileFilter });
-router
-  .route("/")
-  .get(verifyToken, alloewdTo(userRoles.ADMIN, userRoles.MANGER), getAllUsers);
+router.route("/").get(verifyToken, alloewdTo(userRoles.ADMIN), getAllUsers);
 
 router.route("/activation").post(verifyToken, activateUser);
 router
@@ -32,7 +30,7 @@ router
 
 router.route("/getProfile").get(verifyToken, getProfile);
 
-router.route("/register").post(registerValidation(), register);
-router.route("/login").post(loginValidation(), login);
+router.route("/register").post(registerValidation(), userRegister);
+router.route("/login").post(loginValidation(), userLogin);
 
 module.exports = router;

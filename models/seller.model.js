@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const userRoles = require("../utils/user.roles");
 
-const userSchema = new mongoose.Schema({
+const sellerSchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
@@ -25,11 +25,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   token: { type: String },
-  role: {
-    type: String,
-    enum: [userRoles.ADMIN, userRoles.SELLER, userRoles.USER],
-    default: userRoles.USER,
-  },
+  role: { type: String, default: userRoles.SELLER },
 });
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Seller", sellerSchema);

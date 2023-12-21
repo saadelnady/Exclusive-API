@@ -4,6 +4,7 @@ const path = require("path");
 
 const userRouter = require("./routes/user.route");
 const productRouter = require("./routes/product.route");
+const sellerRouter = require("./routes/seller.route");
 const express = require("express");
 const app = express();
 
@@ -23,6 +24,7 @@ app.use(
 
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
+app.use("/api/sellers", sellerRouter);
 
 // wild card
 app.all("*", (req, res, next) => {

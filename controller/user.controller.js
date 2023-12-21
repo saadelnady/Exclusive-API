@@ -63,7 +63,7 @@ const getProfile = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: { user: targetUser } });
 });
 
-const register = asyncWrapper(async (req, res, next) => {
+const userRegister = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -129,7 +129,7 @@ const register = asyncWrapper(async (req, res, next) => {
   });
 });
 
-const login = asyncWrapper(async (req, res, next) => {
+const userLogin = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -196,19 +196,11 @@ const activateUser = asyncWrapper(async (req, res, next) => {
   res.status(200).json({ currentUser });
 });
 
-// const getUser = asyncWrapper(async (req, res, next) => {
-//   console.log("req.currentUser ====>", req.currentUser);
-//   return res.status(200).json({
-//     status: httpStatusText.SUCCESS,
-//     data: { user: req.currentUser },
-//   });
-// });
-
 module.exports = {
   getAllUsers,
   getProfile,
-  register,
-  login,
+  userRegister,
+  userLogin,
   updateUser,
   deleteUser,
   activateUser,
