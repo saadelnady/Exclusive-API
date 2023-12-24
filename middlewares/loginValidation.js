@@ -6,6 +6,7 @@ const loginValidation = () => {
       .withMessage("email is required")
       .isEmail()
       .withMessage("Please provide a valid email"),
+
     body("password").notEmpty().withMessage("password is required"),
   ];
 };

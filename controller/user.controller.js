@@ -74,6 +74,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
   const oldUser = await User.findOne({ email: email });
 
   const mobilePhoneExist = await User.findOne({ mobilePhone: mobilePhone });
+
   if (mobilePhoneExist) {
     const error = appError.create(
       "mobilePhone already exists",
@@ -104,11 +105,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
     role,
   });
   const token = generateToken({
-    firstName,
-    lastName,
-    email,
     id: newUser._id,
-    role: newUser.role,
   });
 
   newUser.token = token;
@@ -149,10 +146,6 @@ const userLogin = asyncWrapper(async (req, res, next) => {
   if (user && matchedPassword) {
     const token = generateToken({
       id: user._id,
-      firstName: user.firstName,
-      email: user.email,
-      lastName: user.lastName,
-      role: user.role,
     });
 
     user.token = token;
