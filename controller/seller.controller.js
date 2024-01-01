@@ -47,7 +47,10 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
     password: hashedPassword,
   });
 
-  const token = generateToken({ id: newSeller._id });
+  const token = generateToken({
+    id: newSeller._id,
+    role: newSeller.role,
+  });
 
   newSeller.token = token;
 
@@ -63,12 +66,12 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { seller: newSeller },
+    data: { token: newSeller.token },
     message: `please cheack your email:-${newSeller.email} to activate your account`,
   });
 });
 
-const loginSeller = asyncWrapper(async (req, res, next) => {
+const sellerLogin = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   const { email, password } = req.body;
 
@@ -85,11 +88,14 @@ const loginSeller = asyncWrapper(async (req, res, next) => {
   const matchedPassword = await bcrypt.compare(password, targetSeller.password);
 
   if (targetSeller && matchedPassword) {
-    const token = generateToken({ id: targetSeller._id });
+    const token = generateToken({
+      id: targetSeller._id,
+      role: targetSeller.role,
+    });
     targetSeller.token = token;
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
-      data: { seller: targetSeller },
+      data: { token: targetSeller.token },
       message: "logged in successfully",
     });
   } else {
@@ -102,4 +108,93 @@ const loginSeller = asyncWrapper(async (req, res, next) => {
   }
 });
 
-module.exports = { sellerRegister, loginSeller };
+const getSellerProfile = asyncWrapper(async (req, res, next) => {
+  const currentId = req.currentUser.id;
+  const targetSeller = await Seller.findById(currentId, { password: false });
+
+  if (!targetSeller) {
+    const error = appError.create(
+      "seller not found",
+      400,
+      httpStatusText.ERROR
+    );
+    return next(error);
+  }
+  targetSeller.sellerImage = `${process.env.BAIS_URL}/${targetSeller.sellerImage}`;
+  res
+    .status(200)
+    .json({ status: httpStatusText.SUCCESS, data: { seller: targetSeller } });
+});
+
+const getAllSellers = asyncWrapper(async (req, res, next) => {
+  let sellers = await Seller.find({}, { __v: false, password: false });
+  if (!sellers) {
+    const error = appError.create(
+      "sellers not found",
+      400,
+      httpStatusText.ERROR
+    );
+    return next(error);
+  }
+
+  sellers.map((seller) => {
+    return (seller.sellerImage = `${process.env.BAIS_URL}/${seller.sellerImage}`);
+  });
+  res.status(200).json({ status: httpStatusText.SUCCESS, data: { sellers } });
+});
+
+const deleteSeller = asyncWrapper(async (req, res, next) => {
+  const sellerId = req.params.id;
+  const targetSeller = await Seller.findById(sellerId);
+  if (!targetSeller) {
+    const error = appError.create("Seller not found", 404, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  const options = { new: true };
+
+  const deletedSeller = await Seller.findByIdAndDelete(sellerId);
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { seller: deletedSeller },
+    message: "Account deleted successfully",
+  });
+});
+
+const updateSeller = asyncWrapper(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const sellerId = req.params.id;
+  const targetSeller = await Seller.findById(sellerId);
+  if (!targetSeller) {
+    const error = appError.create("Seller not found", 404, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  const options = { new: true };
+
+  const updatedSeller = await Seller.findByIdAndUpdate(
+    sellerId,
+    { $set: { ...req.body } },
+    options
+  );
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { seller: updatedSeller },
+    message: "Account updated successfully",
+  });
+});
+
+module.exports = {
+  sellerRegister,
+  sellerLogin,
+  getSellerProfile,
+  updateSeller,
+  getAllSellers,
+  deleteSeller,
+};

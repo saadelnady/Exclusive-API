@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   getAllUsers,
-  getProfile,
+  getUserProfile,
   userRegister,
   userLogin,
   updateUser,
@@ -28,7 +28,7 @@ router
   .put(upload.single("userImage"), updateUser)
   .delete(deleteUser);
 
-router.route("/getProfile").get(verifyToken, getProfile);
+router.route("/getUserProfile").get(verifyToken, getUserProfile);
 
 router.route("/register").post(registerValidation(), userRegister);
 router.route("/login").post(loginValidation(), userLogin);

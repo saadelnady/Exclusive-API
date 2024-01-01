@@ -17,6 +17,9 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
     );
     next(error);
   }
+  users.map((user) => {
+    return (user.userImage = `${process.env.BAIS_URL}/${user.userImage}`);
+  });
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { users } });
@@ -24,7 +27,6 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
 
 const updateUser = asyncWrapper(async (req, res, next) => {
   const { userId } = req.params;
-  console.log(userId);
   const targetUser = await User.findById(userId);
   if (!targetUser) {
     const error = appError.create("user not found", 400, httpStatusText.FAIL);
@@ -41,16 +43,15 @@ const updateUser = asyncWrapper(async (req, res, next) => {
     },
     options
   );
-  console.log(req.file.filename);
+
   updatedUser.userImage = req.file.filename;
-  console.log("===========", updatedUser.userImage);
 
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { user: updatedUser } });
 });
 
-const getProfile = asyncWrapper(async (req, res, next) => {
+const getUserProfile = asyncWrapper(async (req, res, next) => {
   const currentId = req.currentUser.id;
   const targetUser = await User.findById(currentId, { password: false });
   if (!targetUser) {
@@ -106,6 +107,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
   });
   const token = generateToken({
     id: newUser._id,
+    role: newUser.role,
   });
 
   newUser.token = token;
@@ -121,7 +123,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { user: newUser },
+    data: { token: newUser.token },
     message: `please cheack your email:-${newUser.email} to activate your account`,
   });
 });
@@ -146,13 +148,14 @@ const userLogin = asyncWrapper(async (req, res, next) => {
   if (user && matchedPassword) {
     const token = generateToken({
       id: user._id,
+      role: user.role,
     });
 
     user.token = token;
 
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
-      data: { user: user },
+      data: { token: user.token, role: user.role },
       message: "logged in successfully",
     });
   } else {
@@ -178,9 +181,10 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
   const deletedUser = await User.deleteOne({ _id: req.params.userId });
-  res
-    .status(201)
-    .json({ status: httpStatusText.SUCCESS, data: { user: deletedUser } });
+  res.status(201).json({
+    status: httpStatusText.SUCCESS,
+    data: { user: deletedUser },
+  });
 });
 
 const activateUser = asyncWrapper(async (req, res, next) => {
@@ -191,7 +195,7 @@ const activateUser = asyncWrapper(async (req, res, next) => {
 
 module.exports = {
   getAllUsers,
-  getProfile,
+  getUserProfile,
   userRegister,
   userLogin,
   updateUser,

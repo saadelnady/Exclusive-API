@@ -30,7 +30,6 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
 
 const getProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
-  console.log("productId ====>", productId);
 
   if (!productId) {
     const error = appError.create(
@@ -41,7 +40,7 @@ const getProduct = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
   const targetProduct = await Product.findById(productId);
-  console.log(targetProduct);
+
   res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
