@@ -9,7 +9,13 @@ const multer = require("multer");
 const upload = multer({ storage: configureMulter("products"), fileFilter });
 
 const getAllProducts = asyncWrapper(async (req, res, next) => {
-  const products = await Product.find();
+  const query = req.query;
+
+  const limit = query.limit;
+  const page = query.page;
+  const skip = (page - 1) * limit;
+
+  const products = await Product.find().limit(limit).skip(skip);
 
   if (!products) {
     const error = appError.create(
@@ -30,7 +36,7 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
 
 const getProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
-
+  const targetProduct = await Product.findById(productId);
   if (!productId) {
     const error = appError.create(
       "ProductId is required",
@@ -39,7 +45,14 @@ const getProduct = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  const targetProduct = await Product.findById(productId);
+  if (!targetProduct) {
+    const error = appError.create(
+      "product n't found ",
+      404,
+      httpStatusText.ERROR
+    );
+    return next(error);
+  }
 
   res
     .status(200)
@@ -52,8 +65,9 @@ const addProduct = asyncWrapper(async (req, res, next) => {
     return res.json({ status: httpStatusText.FAIL, errors: { errors } });
   }
 
-  const newProduct = new product({ ...req.body });
+  const newProduct = new Product({ ...req.body });
   newProduct.productImage = req.file.filename;
+  await newProduct.save();
   return res
     .status(201)
     .json({ status: httpStatusText.SUCCESS, data: { product: newProduct } });

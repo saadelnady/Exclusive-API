@@ -127,7 +127,14 @@ const getSellerProfile = asyncWrapper(async (req, res, next) => {
 });
 
 const getAllSellers = asyncWrapper(async (req, res, next) => {
-  let sellers = await Seller.find({}, { __v: false, password: false });
+  const query = req.query;
+
+  const limit = query.limit;
+  const page = query.page;
+  const skip = (page - 1) * limit;
+  let sellers = await Seller.find({}, { __v: false, password: false })
+    .limit(limit)
+    .skip(skip);
   if (!sellers) {
     const error = appError.create(
       "sellers not found",

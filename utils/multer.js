@@ -4,7 +4,9 @@ const httpStatusText = require("../utils/utils");
 const configureMulter = (folderName) => {
   const storage = multer.diskStorage({
     // choose file direction based on folderName
+    // cb refer to callback
     destination: function (req, file, cb) {
+      // callback(error , where we saving data)
       cb(null, `uploads/${folderName}`);
     },
     filename: function (req, file, cb) {
@@ -17,6 +19,8 @@ const configureMulter = (folderName) => {
         fileName = `user-${Date.now()}.${extension}`;
       } else if (folderName === "products") {
         fileName = `product-${Date.now()}.${extension}`;
+      } else if (folderName === "categories") {
+        fileName = file.originalname;
       }
       cb(null, fileName);
     },

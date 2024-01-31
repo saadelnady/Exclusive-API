@@ -8,7 +8,14 @@ const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
 
 const getAllUsers = asyncWrapper(async (req, res, next) => {
-  const users = await User.find({}, { __v: false, password: false });
+  const query = req.query;
+
+  const limit = query.limit;
+  const page = query.page;
+  const skip = (page - 1) * limit;
+  const users = await User.find({}, { __v: false, password: false })
+    .limit(limit)
+    .skip(skip);
   if (!users) {
     const error = appError.create(
       "there is n't any user to show",
