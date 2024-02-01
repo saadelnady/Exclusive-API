@@ -7,10 +7,10 @@ const httpStatusText = require("../utils/utils");
 const getAllCategories = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
   const skip = (page - 1) * limit;
-  const categouries = await Category.find({}, { __v: false })
+  const categories = await Category.find({}, { __v: false })
     .limit(limit)
     .skip(skip);
-  if (!categouries) {
+  if (!categories) {
     const error = appError.create(
       "No categories to show",
       400,
@@ -20,7 +20,7 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
   }
   return res
     .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { categouries } });
+    .json({ status: httpStatusText.SUCCESS, data: { categories } });
 });
 
 const addCategory = asyncWrapper(async (req, res, next) => {
