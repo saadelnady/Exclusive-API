@@ -1,10 +1,13 @@
 require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
+
+// Routers
 const userRouter = require("./routes/user.route");
 const productRouter = require("./routes/product.route");
 const sellerRouter = require("./routes/seller.route");
 const categoryRouter = require("./routes/category.route");
+const subCategoriesRouter = require("./routes/subCategory.route");
 
 const express = require("express");
 const app = express();
@@ -29,11 +32,17 @@ app.use(
   "/uploads/categories",
   express.static(path.join(__dirname, "uploads/categories"))
 );
+// to preview subcategory image
+app.use(
+  "/uploads/subCategories",
+  express.static(path.join(__dirname, "uploads/subCategories"))
+);
 
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/sellers", sellerRouter);
 app.use("/api/categories", categoryRouter);
+app.use("/api/subCategories", subCategoriesRouter);
 
 // wild card
 app.all("*", (req, res, next) => {

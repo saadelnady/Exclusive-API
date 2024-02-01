@@ -1,6 +1,8 @@
 const express = require("express");
-const registerValidation = require("../middlewares/registerValidation");
-const loginValidation = require("../middlewares/loginValidation");
+const {
+  registerValidation,
+  loginValidation,
+} = require("../middlewares/authValidation");
 const {
   sellerRegister,
   sellerLogin,

@@ -8,10 +8,7 @@ const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
 
 const getAllUsers = asyncWrapper(async (req, res, next) => {
-  const query = req.query;
-
-  const limit = query.limit;
-  const page = query.page;
+  const { limit, page } = req.query;
   const skip = (page - 1) * limit;
   const users = await User.find({}, { __v: false, password: false })
     .limit(limit)

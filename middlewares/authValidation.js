@@ -1,4 +1,18 @@
 const { body } = require("express-validator");
+
+const loginValidation = () => {
+  return [
+    body("email")
+      .notEmpty()
+      .withMessage("email is required")
+      .isEmail()
+      .withMessage("Please provide a valid email"),
+
+    body("password").notEmpty().withMessage("password is required"),
+  ];
+};
+
+ 
 const registerValidation = () => {
   return [
     body("firstName")
@@ -33,4 +47,4 @@ const registerValidation = () => {
   ];
 };
 
-module.exports = registerValidation;
+module.exports ={ registerValidation,loginValidation};

@@ -20,7 +20,9 @@ const configureMulter = (folderName) => {
       } else if (folderName === "products") {
         fileName = `product-${Date.now()}.${extension}`;
       } else if (folderName === "categories") {
-        fileName = file.originalname;
+        fileName = `category-${Date.now()}.${extension}`;
+      } else if (folderName === "subCategories") {
+        fileName = `subCategory-${Date.now()}.${extension}`;
       }
       cb(null, fileName);
     },

@@ -48,8 +48,8 @@ const getProduct = asyncWrapper(async (req, res, next) => {
   if (!targetProduct) {
     const error = appError.create(
       "product n't found ",
-      404,
-      httpStatusText.ERROR
+      400,
+      httpStatusText.FAIL
     );
     return next(error);
   }

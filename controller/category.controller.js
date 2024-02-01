@@ -5,10 +5,7 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 
 const getAllCategories = asyncWrapper(async (req, res, next) => {
-  const query = req.query;
-
-  const limit = query.limit;
-  const page = query.page;
+  const { limit, page } = req.query;
   const skip = (page - 1) * limit;
   const categouries = await Category.find({}, { __v: false })
     .limit(limit)
@@ -32,10 +29,10 @@ const addCategory = asyncWrapper(async (req, res, next) => {
     return res.json({ status: httpStatusText.FAIL, errors: { errors } });
   }
 
-  const { categoryTitle } = req.body;
+  const { title } = req.body;
 
   const categoryExist = await Category.findOne({
-    categoryTitle: categoryTitle,
+    title: title,
   });
   if (categoryExist) {
     const error = appError.create(
@@ -47,20 +44,25 @@ const addCategory = asyncWrapper(async (req, res, next) => {
   }
 
   const newCategory = new Category({ ...req.body });
-  newCategory.categoryImage = req.file.filename;
+  newCategory.image = req.file?.filename;
 
   await newCategory.save();
 
   return res
     .status(201)
-    .json({ status: httpStatusText.SUCCESS, data: { category: newCategory } });
+
+    .json({
+      status: httpStatusText.SUCCESS,
+      data: { category: newCategory },
+      message: "category added Successfully",
+    });
 });
 
 const getCategory = asyncWrapper(async (req, res, next) => {
   const { categoryId } = req.params;
   const targetCategory = await Category.findById(categoryId);
   if (!targetCategory) {
-    const error = new appError.create(
+    const error = appError.create(
       "category not found",
       400,
       httpStatusText.FAIL
@@ -80,11 +82,81 @@ const getCategory = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: targetCategory });
 });
 
-const editCategory = asyncWrapper(async (req, res, next) => {});
+const editCategory = asyncWrapper(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.json({ status: httpStatusText.FAIL, errors: { errors } });
+  }
+
+  const { categoryId } = req.params;
+
+  const targetCategory = await Category.findById(categoryId);
+  if (!targetCategory) {
+    const error = appError.create(
+      "category not found",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+  const options = {
+    new: true,
+  };
+
+  const { title } = req.body;
+  const categoryExist = await Category.findOne({
+    title: title,
+  });
+
+  if (categoryExist) {
+    const error = appError.create(
+      "category is already exist",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+  const updatedCategory = await Category.findByIdAndUpdate(
+    categoryId,
+    {
+      $set: { ...req.body },
+    },
+    options
+  );
+  console.log(req.file);
+  updatedCategory.image = req.file?.filename;
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { category: updatedCategory },
+    message: "category updated Successfully",
+  });
+});
+
+const deleteCategory = asyncWrapper(async (req, res, next) => {
+  const { categoryId } = req.params;
+  const targetCategory = await Category.findById(categoryId);
+  if (!targetCategory) {
+    const error = appError.create(
+      "category not found",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  const deletedCategory = await Category.deleteOne({ _id: categoryId });
+  res.status(201).json({
+    status: httpStatusText.SUCCESS,
+    message: "category deleted Successfully",
+    data: { category: deletedCategory },
+  });
+});
 
 module.exports = {
   getAllCategories,
   addCategory,
   getCategory,
   editCategory,
+  deleteCategory,
 };

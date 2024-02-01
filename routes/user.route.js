@@ -9,8 +9,10 @@ const {
   activateUser,
 } = require("../controller/user.controller");
 
-const registerValidation = require("../middlewares/registerValidation");
-const loginValidation = require("../middlewares/loginValidation");
+const {
+  registerValidation,
+  loginValidation,
+} = require("../middlewares/authValidation");
 const verifyToken = require("../middlewares/verifyToken");
 const userRoles = require("../utils/user.roles");
 const alloewdTo = require("../middlewares/alloewdTo");

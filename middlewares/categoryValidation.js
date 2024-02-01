@@ -1,11 +1,20 @@
 const { body } = require("express-validator");
 
-module.exports = () => {
+const addCategoryValidation = () => {
   return [
-    body("categoryTitle")
+    body("title")
       .notEmpty()
-      .withMessage("categoryImage is required")
+      .withMessage("Title is required")
       .isLength({ min: 3, max: 20 })
-      .withMessage("name must be  at least 3 chars or 20 chars maximum"),
+      .withMessage("Title must be  at least 3 chars or 20 chars maximum"),
   ];
 };
+
+const editCategoryValidation = () => {
+  return [
+    body("title")
+      .isLength({ min: 3, max: 20 })
+      .withMessage("Title must be  at least 3 chars or 20 chars maximum"),
+  ];
+};
+module.exports = { addCategoryValidation, editCategoryValidation };

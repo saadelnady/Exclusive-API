@@ -1,12 +1,16 @@
 const express = require("express");
 
-const categoryValidation = require("../middlewares/categoryValidation");
+const {
+  addCategoryValidation,
+  editCategoryValidation,
+} = require("../middlewares/categoryValidation");
 
 const {
   getAllCategories,
   addCategory,
   getCategory,
   editCategory,
+  deleteCategory,
 } = require("../controller/category.controller");
 
 const multer = require("multer");
@@ -18,9 +22,11 @@ const Router = express.Router();
 
 Router.route("/")
   .get(getAllCategories)
-  .post(upload.single("categoryImage"), categoryValidation(), addCategory);
+  .post(upload.single("image"), addCategoryValidation(), addCategory);
 
-Router.route("/:categoryId").get(getCategory).put(editCategory);
-//   .delete(deleteCategory);
+Router.route("/:categoryId")
+  .get(getCategory)
+  .put(upload.single("image"), editCategoryValidation(), editCategory)
+  .delete(deleteCategory);
 
 module.exports = Router;
