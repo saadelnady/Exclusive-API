@@ -4,6 +4,7 @@ const subCategory = require("../models/subCategory.model");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const Subcategory = require("../models/subCategory.model");
+const Category = require("../models/category.model");
 
 const getAllSubCategories = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
@@ -33,30 +34,50 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.json({ status: httpStatusText.FAIL, errors: { errors } });
   }
+  const categoryId = req.body.category;
+  const subCategoryTitle = req.body.title;
+  const targetCategory = await Category.findOne({ _id: categoryId });
+  console.log("targetCategory =====>", targetCategory);
+  if (!targetCategory) {
+    return res.json({
+      status: httpStatusText.FAIL,
+      errors: "Category not found",
+    });
+  }
 
-  const { title } = req.body;
+  // Check if a subcategory with the same title already exists in the category
+
   const subCategoryExist = await Subcategory.findOne({
-    title: title,
+    _id: { $in: targetCategory.subCategories },
+    title: subCategoryTitle,
   });
-
+  console.log("existingSubcategory", subCategoryExist);
   if (subCategoryExist) {
     const error = appError.create(
-      " subCategory is already exists",
+      "Subcategory with the same title already exists in the category",
       400,
       httpStatusText.FAIL
     );
     return next(error);
+  } else {
+    const newSubCategory = new Subcategory({
+      title: subCategoryTitle,
+      image: req.file?.filename,
+      category: categoryId,
+    });
+
+    // save new subCategory in database
+    await newSubCategory.save();
+    // Update the category's subCategories array with the new subcategory's ObjectId
+    await Category.findByIdAndUpdate(categoryId, {
+      $push: { subCategories: newSubCategory._id },
+    });
+    return res.status(201).json({
+      status: httpStatusText.SUCCESS,
+      data: { subCategory: newSubCategory },
+      messege: "subcategory added successfully",
+    });
   }
-
-  const newSubCategory = new Subcategory({ ...req.body });
-  newSubCategory.image = req.file?.filename;
-  await newSubCategory.save();
-
-  return res.status(201).json({
-    status: httpStatusText.SUCCESS,
-    data: { newSubCategory },
-    messege: "sub category added successfully",
-  });
 });
 
 const getSubCategory = asyncWrapper(async (req, res, next) => {

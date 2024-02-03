@@ -8,6 +8,7 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
   const skip = (page - 1) * limit;
   const categories = await Category.find({}, { __v: false })
+    .populate("subCategories")
     .limit(limit)
     .skip(skip);
   if (!categories) {

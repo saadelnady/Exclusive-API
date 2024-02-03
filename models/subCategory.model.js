@@ -14,7 +14,6 @@ const subcategorySchema = new mongoose.Schema(
     category: {
       type: objectId,
       ref: "Category",
-      required: true,
     },
   },
   {
