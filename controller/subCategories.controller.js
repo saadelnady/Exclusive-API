@@ -37,7 +37,7 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
   const categoryId = req.body.category;
   const subCategoryTitle = req.body.title;
   const targetCategory = await Category.findOne({ _id: categoryId });
-  console.log("targetCategory =====>", targetCategory);
+
   if (!targetCategory) {
     return res.json({
       status: httpStatusText.FAIL,
@@ -117,15 +117,12 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
   const targetSubCategory = await Subcategory.findById(subCategoryId);
   if (!targetSubCategory) {
     const error = appError.create(
-      "targetSubCategory not found",
+      "target SubCategory is not found",
       400,
       httpStatusText.FAIL
     );
     return next(error);
   }
-  const options = {
-    new: true,
-  };
 
   const { title } = req.body;
   const subCategoryExist = await Subcategory.findOne({
@@ -140,15 +137,20 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+
   const updatedSubCategory = await Subcategory.findByIdAndUpdate(
     subCategoryId,
     {
       $set: { ...req.body },
     },
-    options
+    {
+      new: true,
+    }
   ).populate("category");
 
-  updatedSubCategory.image = req.file?.filename;
+  if (req.file) {
+    updatedSubCategory.image = req.file.filename;
+  }
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
@@ -172,12 +174,19 @@ const deleteSubCategory = asyncWrapper(async (req, res, next) => {
   const deletedSubCategory = await Subcategory.deleteOne({
     _id: subCategoryId,
   });
+
+  await Category.findByIdAndUpdate(
+    targetSubCategory.category,
+    { $pull: { subCategories: subCategoryId } },
+    { new: true }
+  );
   res.status(201).json({
     status: httpStatusText.SUCCESS,
     message: "Subcategory deleted Successfully",
     data: { SubCategory: deletedSubCategory },
   });
 });
+
 module.exports = {
   getAllSubCategories,
   addSubCategory,
