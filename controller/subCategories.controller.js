@@ -62,10 +62,12 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
   } else {
     const newSubCategory = new Subcategory({
       title: subCategoryTitle,
-      image: req.file?.filename,
       category: categoryId,
     });
 
+    if (req?.file) {
+      newSubCategory.image = `uploads/subCategories/${req?.file?.filename}`;
+    }
     // save new subCategory in database
     await newSubCategory.save();
     // Update the category's subCategories array with the new subcategory's ObjectId
@@ -113,7 +115,7 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
   }
 
   const { subCategoryId } = req.params;
-  console.log(subCategoryId);
+
   const targetSubCategory = await Subcategory.findById(subCategoryId);
   if (!targetSubCategory) {
     const error = appError.create(
@@ -124,38 +126,39 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const { title } = req.body;
+  const { title, category } = req.body;
   const subCategoryExist = await Subcategory.findOne({
+    _id: { $ne: subCategoryId }, // Exclude the current subcategory from the check
     title: title,
+    category: category, // Check within the same category
   });
 
   if (subCategoryExist) {
     const error = appError.create(
-      "subCategory is already exist",
+      "SubCategory with the same title already exists in the same category",
       400,
       httpStatusText.FAIL
     );
     return next(error);
   }
 
+  const updatedSubCategoryData = { ...req.body };
+
+  if (req?.file) {
+    updatedSubCategoryData.image = `uploads/subCategories/${req.file.filename}`;
+  }
+
+  // Update the subcategory
   const updatedSubCategory = await Subcategory.findByIdAndUpdate(
     subCategoryId,
-    {
-      $set: { ...req.body },
-    },
-    {
-      new: true,
-    }
+    { $set: updatedSubCategoryData },
+    { new: true }
   ).populate("category");
-
-  if (req.file) {
-    updatedSubCategory.image = req.file.filename;
-  }
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { category: updatedSubCategory },
-    message: "SubCategory updated Successfully",
+    data: { subCategory: updatedSubCategory },
+    message: "SubCategory updated successfully",
   });
 });
 

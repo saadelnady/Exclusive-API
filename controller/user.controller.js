@@ -21,9 +21,7 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
     );
     next(error);
   }
-  users.map((user) => {
-    return (user.userImage = `${process.env.BAIS_URL}/${user.userImage}`);
-  });
+
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { users } });
@@ -62,7 +60,7 @@ const getUserProfile = asyncWrapper(async (req, res, next) => {
     const error = appError.create("user not found", 404, httpStatusText.FAIL);
     return next(error);
   }
-  targetUser.userImage = `${process.env.BAIS_URL}/${targetUser.userImage}`;
+
   return res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { user: targetUser } });

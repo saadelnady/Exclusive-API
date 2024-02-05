@@ -45,18 +45,16 @@ const addCategory = asyncWrapper(async (req, res, next) => {
   }
 
   const newCategory = new Category({ ...req.body });
-  newCategory.image = req.file?.filename;
-
+  if (req?.file) {
+    newCategory.image = `uploads/categories/${req?.file?.filename}`;
+  }
   await newCategory.save();
 
-  return res
-    .status(201)
-
-    .json({
-      status: httpStatusText.SUCCESS,
-      data: { category: newCategory },
-      message: "category added Successfully",
-    });
+  return res.status(201).json({
+    status: httpStatusText.SUCCESS,
+    data: { category: newCategory },
+    message: "category added Successfully",
+  });
 });
 
 const getCategory = asyncWrapper(async (req, res, next) => {
@@ -117,6 +115,9 @@ const editCategory = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+  if (req?.file) {
+    updatedCategory.image = `uploads/categories/${req?.file?.filename}`;
+  }
   const updatedCategory = await Category.findByIdAndUpdate(
     categoryId,
     {
@@ -124,8 +125,6 @@ const editCategory = asyncWrapper(async (req, res, next) => {
     },
     options
   );
-  console.log(req.file);
-  updatedCategory.image = req.file?.filename;
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,

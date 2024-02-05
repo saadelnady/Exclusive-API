@@ -144,9 +144,6 @@ const getAllSellers = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  sellers.map((seller) => {
-    return (seller.sellerImage = `${process.env.BAIS_URL}/${seller.sellerImage}`);
-  });
   res.status(200).json({ status: httpStatusText.SUCCESS, data: { sellers } });
 });
 
