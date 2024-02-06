@@ -8,11 +8,11 @@ const {
   deleteProduct,
 } = require("../controller/product.controller");
 const productValidation = require("../middlewares/productValidation");
-const { configureMulter, fileFilter } = require("../utils/multer");
+const { storage, fileFilter } = require("../utils/multer");
 
 const multer = require("multer");
 
-const upload = multer({ storage: configureMulter("products"), fileFilter });
+const upload = multer({ storage: storage, fileFilter });
 
 const Router = express.Router();
 

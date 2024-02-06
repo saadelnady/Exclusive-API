@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    userImage: { type: String, default: "uploads/users/user-default.png" },
+    userImage: { type: String, default: "uploads/user-default.png" },
     mobilePhone: { type: String, unique: true, required: true },
     address: { type: String },
     email: {

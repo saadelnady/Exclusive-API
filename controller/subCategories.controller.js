@@ -66,7 +66,7 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
     });
 
     if (req?.file) {
-      newSubCategory.image = `uploads/subCategories/${req?.file?.filename}`;
+      newSubCategory.image = `uploads/${req?.file?.filename}`;
     }
     // save new subCategory in database
     await newSubCategory.save();
@@ -145,7 +145,7 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
   const updatedSubCategoryData = { ...req.body };
 
   if (req?.file) {
-    updatedSubCategoryData.image = `uploads/subCategories/${req.file.filename}`;
+    updatedSubCategoryData.image = `uploads/${req.file.filename}`;
   }
 
   // Update the subcategory

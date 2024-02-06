@@ -3,10 +3,10 @@ const asyncWrapper = require("../middlewares/asyncWrapper");
 const Product = require("../models/product.model");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
-const { configureMulter, fileFilter } = require("../utils/multer");
+const { storage, fileFilter } = require("../utils/multer");
 const multer = require("multer");
 
-const upload = multer({ storage: configureMulter("products"), fileFilter });
+const upload = multer({ storage: storage, fileFilter });
 
 const getAllProducts = asyncWrapper(async (req, res, next) => {
   const query = req.query;

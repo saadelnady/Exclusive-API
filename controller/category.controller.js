@@ -46,7 +46,7 @@ const addCategory = asyncWrapper(async (req, res, next) => {
 
   const newCategory = new Category({ ...req.body });
   if (req?.file) {
-    newCategory.image = `uploads/categories/${req?.file?.filename}`;
+    newCategory.image = `uploads/${req?.file?.filename}`;
   }
   await newCategory.save();
 
@@ -116,7 +116,7 @@ const editCategory = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
   if (req?.file) {
-    updatedCategory.image = `uploads/categories/${req?.file?.filename}`;
+    updatedCategory.image = `uploads/${req?.file?.filename}`;
   }
   const updatedCategory = await Category.findByIdAndUpdate(
     categoryId,

@@ -9,7 +9,7 @@ const subcategorySchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      default: "uploads/subCategories/subCategory-default.png",
+      default: "uploads/subCategory-default.png",
     },
     category: {
       type: objectId,

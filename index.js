@@ -8,7 +8,7 @@ const productRouter = require("./routes/product.route");
 const sellerRouter = require("./routes/seller.route");
 const categoryRouter = require("./routes/category.route");
 const subCategoriesRouter = require("./routes/subCategory.route");
-
+const uploadRouter = require("./routes/upload");
 const express = require("express");
 const app = express();
 
@@ -17,26 +17,9 @@ const errorHandler = require("./middlewares/errorHandler");
 
 app.use(cors());
 app.use(express.json());
-// to preview users image
-app.use(
-  "/uploads/users",
-  express.static(path.join(__dirname, "uploads/users"))
-);
-// to preview produts image
-app.use(
-  "/uploads/products",
-  express.static(path.join(__dirname, "uploads/products"))
-);
-// to preview category image
-app.use(
-  "/uploads/categories",
-  express.static(path.join(__dirname, "uploads/categories"))
-);
-// to preview subcategory image
-app.use(
-  "/uploads/subCategories",
-  express.static(path.join(__dirname, "uploads/subCategories"))
-);
+// to preview image
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/api/upload", uploadRouter);
 
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);

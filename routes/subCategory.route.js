@@ -6,10 +6,10 @@ const {
 } = require("../middlewares/categoryValidation");
 
 const multer = require("multer");
-const { configureMulter, fileFilter } = require("../utils/multer");
+const { storage, fileFilter } = require("../utils/multer");
 
 const upload = multer({
-  storage: configureMulter("subCategories"),
+  storage: storage,
   fileFilter,
 });
 const {
@@ -22,7 +22,7 @@ const {
 
 Router.route("/")
   .get(getAllSubCategories)
-  .post(upload.single("image"), addCategoryValidation(), addSubCategory);
+  .post(addCategoryValidation(), addSubCategory);
 
 Router.route("/:subCategoryId")
   .get(getSubCategory)

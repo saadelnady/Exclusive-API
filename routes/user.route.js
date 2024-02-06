@@ -17,11 +17,11 @@ const verifyToken = require("../middlewares/verifyToken");
 const userRoles = require("../utils/user.roles");
 const alloewdTo = require("../middlewares/alloewdTo");
 const multer = require("multer");
-const { configureMulter, fileFilter } = require("../utils/multer");
+const { storage, fileFilter } = require("../utils/multer");
 
 const router = express.Router();
 
-const upload = multer({ storage: configureMulter("users"), fileFilter });
+const upload = multer({ storage: storage, fileFilter });
 router.route("/").get(verifyToken, alloewdTo(userRoles.ADMIN), getAllUsers);
 
 router.route("/activation").post(verifyToken, activateUser);
