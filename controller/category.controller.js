@@ -115,15 +115,15 @@ const editCategory = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  if (req?.file) {
-    updatedCategory.image = `uploads/${req?.file?.filename}`;
+  let updateFields = { ...req.body };
+  if (req.file) {
+    updateFields.image = `uploads/${req.file.filename}`;
   }
-  const updatedCategory = await Category.findByIdAndUpdate(
-    categoryId,
-    {
-      $set: { ...req.body },
-    },
-    options
+
+  const updatedCategory = await Category.findOneAndUpdate(
+    { _id: categoryId },
+    { $set: updateFields },
+    { ...options, new: true }
   );
 
   return res.status(200).json({
