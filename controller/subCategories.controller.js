@@ -77,7 +77,7 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
     return res.status(201).json({
       status: httpStatusText.SUCCESS,
       data: { subCategory: newSubCategory },
-      messege: "subcategory added successfully",
+      message: "subcategory added successfully",
     });
   }
 });
