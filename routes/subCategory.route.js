@@ -22,7 +22,7 @@ const {
 
 Router.route("/")
   .get(getAllSubCategories)
-  .post(addCategoryValidation(), addSubCategory);
+  .post(upload.single("image"), addCategoryValidation(), addSubCategory);
 
 Router.route("/:subCategoryId")
   .get(getSubCategory)

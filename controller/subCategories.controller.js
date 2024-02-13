@@ -9,13 +9,16 @@ const Category = require("../models/category.model");
 const getAllSubCategories = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
   const skip = (page - 1) * limit;
-  const subCategouries = await subCategory
+  const subCategories = await subCategory
     .find({}, { __v: false })
     .populate("category")
     .limit(limit)
     .skip(skip);
+  const allSubCategories = await subCategory.find({}, { __v: false });
 
-  if (!subCategouries) {
+  const subCategorieslegth = allSubCategories.length;
+
+  if (!subCategories) {
     const error = appError.create(
       "No subcategories to show",
       400,
@@ -24,9 +27,10 @@ const getAllSubCategories = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  return res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { subCategouries } });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { subCategories, total: subCategorieslegth },
+  });
 });
 
 const addSubCategory = asyncWrapper(async (req, res, next) => {
@@ -113,7 +117,6 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.json({ status: httpStatusText.FAIL, errors: { errors } });
   }
-
   const { subCategoryId } = req.params;
 
   const targetSubCategory = await Subcategory.findById(subCategoryId);
@@ -126,23 +129,35 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const { title, category } = req.body;
-  const subCategoryExist = await Subcategory.findOne({
-    _id: { $ne: subCategoryId }, // Exclude the current subcategory from the check
-    title: title,
-    category: category, // Check within the same category
-  });
+  const categoryId = req.body.category;
+  const subCategoryTitle = req.body.title;
+  const targetCategory = await Category.findOne({ _id: categoryId });
 
+  if (!targetCategory) {
+    return res.json({
+      status: httpStatusText.FAIL,
+      errors: "Category not found",
+    });
+  }
+  // Check if a subcategory with the same title already exists in the category
+
+  const subCategoryExist = await Subcategory.findOne({
+    _id: { $in: targetCategory.subCategories },
+    title: subCategoryTitle,
+  });
+  console.log("existingSubcategory", subCategoryExist);
   if (subCategoryExist) {
     const error = appError.create(
-      "SubCategory with the same title already exists in the same category",
+      "Subcategory with the same title already exists in the category",
       400,
       httpStatusText.FAIL
     );
     return next(error);
   }
-
-  const updatedSubCategoryData = { ...req.body };
+  const updatedSubCategoryData = {
+    title: subCategoryTitle,
+    category: categoryId,
+  };
 
   if (req?.file) {
     updatedSubCategoryData.image = `uploads/${req.file.filename}`;
