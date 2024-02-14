@@ -5,26 +5,35 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 
 const getAllCategories = asyncWrapper(async (req, res, next) => {
-  const { limit, page } = req.query;
+  const { limit, page, text } = req.query;
   const skip = (page - 1) * limit;
-  const categories = await Category.find({}, { __v: false })
+
+  // Constructing the regex to match categories containing the provided text
+  const regex = new RegExp(text, "i");
+
+  // Query to find categories with title matching the regex
+  const categories = await Category.find({ title: regex }, { __v: false })
     .populate("subCategories")
     .limit(limit)
     .skip(skip);
+
+  // Query to get all categories (for calculating total count)
   const allCategories = await Category.find({}, { __v: false });
 
-  const categorieslength = allCategories.length;
-  if (!categories) {
+  const categoriesLength = allCategories.length;
+
+  if (!categories.length) {
     const error = appError.create(
-      "No categories to show",
-      400,
-      httpStatusText.FAIL
+      "No categories match the search criteria",
+      404,
+      httpStatusText.NOT_FOUND
     );
     return next(error);
   }
+
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { categories, total: categorieslength },
+    data: { categories, total: categoriesLength },
   });
 });
 
@@ -82,9 +91,10 @@ const getCategory = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: targetCategory });
+  res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { category: targetCategory },
+  });
 });
 
 const editCategory = asyncWrapper(async (req, res, next) => {

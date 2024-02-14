@@ -120,7 +120,7 @@ const getSellerProfile = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  targetSeller.sellerImage = `${process.env.BAIS_URL}/${targetSeller.sellerImage}`;
+  targetSeller.image = `${process.env.BAIS_URL}/${targetSeller.image}`;
   res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { seller: targetSeller } });

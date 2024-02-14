@@ -27,7 +27,7 @@ router.route("/").get(verifyToken, alloewdTo(userRoles.ADMIN), getAllUsers);
 router.route("/activation").post(verifyToken, activateUser);
 router
   .route("/:userId")
-  .put(upload.single("userImage"), updateUser)
+  .put(upload.single("image"), updateUser)
   .delete(deleteUser);
 
 router.route("/getUserProfile").get(verifyToken, getUserProfile);

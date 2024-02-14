@@ -109,7 +109,10 @@ const getSubCategory = asyncWrapper(async (req, res, next) => {
   }
   res
     .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: targetSubCategory });
+    .json({
+      status: httpStatusText.SUCCESS,
+      data: { subCategory: targetSubCategory },
+    });
 });
 
 const editSubCategory = asyncWrapper(async (req, res, next) => {

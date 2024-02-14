@@ -12,7 +12,7 @@ const sellerSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    sellerImage: { type: String, default: "uploads/seller-default.png" },
+    image: { type: String, default: "uploads/seller-default.png" },
     mobilePhone: { type: String, unique: true, required: true },
     address: { type: String },
     email: {

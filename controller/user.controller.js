@@ -46,7 +46,7 @@ const updateUser = asyncWrapper(async (req, res, next) => {
     options
   );
 
-  updatedUser.userImage = req.file.filename;
+  updatedUser.image = req.file.filename;
 
   return res
     .status(200)
