@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-const objectId = mongoose.Types.ObjectId;
-
 const subcategorySchema = new mongoose.Schema(
   {
     title: {
@@ -12,7 +10,7 @@ const subcategorySchema = new mongoose.Schema(
       default: "uploads/subCategory-default.png",
     },
     category: {
-      type: objectId,
+      type: mongoose.Types.ObjectId,
       ref: "Category",
     },
   },

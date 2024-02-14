@@ -16,7 +16,7 @@ const getAllSubCategories = asyncWrapper(async (req, res, next) => {
     .skip(skip);
   const allSubCategories = await subCategory.find({}, { __v: false });
 
-  const subCategorieslegth = allSubCategories.length;
+  const subCategorieslength = allSubCategories.length;
 
   if (!subCategories) {
     const error = appError.create(
@@ -29,7 +29,7 @@ const getAllSubCategories = asyncWrapper(async (req, res, next) => {
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { subCategories, total: subCategorieslegth },
+    data: { subCategories, total: subCategorieslength },
   });
 });
 
@@ -131,6 +131,7 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
 
   const categoryId = req.body.category;
   const subCategoryTitle = req.body.title;
+
   const targetCategory = await Category.findOne({ _id: categoryId });
 
   if (!targetCategory) {
@@ -139,13 +140,14 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
       errors: "Category not found",
     });
   }
+
   // Check if a subcategory with the same title already exists in the category
 
   const subCategoryExist = await Subcategory.findOne({
     _id: { $in: targetCategory.subCategories },
     title: subCategoryTitle,
   });
-  console.log("existingSubcategory", subCategoryExist);
+
   if (subCategoryExist) {
     const error = appError.create(
       "Subcategory with the same title already exists in the category",
@@ -163,12 +165,23 @@ const editSubCategory = asyncWrapper(async (req, res, next) => {
     updatedSubCategoryData.image = `uploads/${req.file.filename}`;
   }
 
+  await Category.findByIdAndUpdate(
+    targetSubCategory.category,
+    { $pull: { subCategories: subCategoryId } },
+    { new: true }
+  );
+
   // Update the subcategory
   const updatedSubCategory = await Subcategory.findByIdAndUpdate(
     subCategoryId,
     { $set: updatedSubCategoryData },
     { new: true }
   ).populate("category");
+
+  // update category with new data
+  await Category.findByIdAndUpdate(categoryId, {
+    $push: { subCategories: updatedSubCategory },
+  });
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,

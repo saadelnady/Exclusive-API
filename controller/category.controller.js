@@ -11,6 +11,9 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
     .populate("subCategories")
     .limit(limit)
     .skip(skip);
+  const allCategories = await Category.find({}, { __v: false });
+
+  const categorieslength = allCategories.length;
   if (!categories) {
     const error = appError.create(
       "No categories to show",
@@ -19,9 +22,10 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  return res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { categories } });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { categories, total: categorieslength },
+  });
 });
 
 const addCategory = asyncWrapper(async (req, res, next) => {
@@ -59,7 +63,9 @@ const addCategory = asyncWrapper(async (req, res, next) => {
 
 const getCategory = asyncWrapper(async (req, res, next) => {
   const { categoryId } = req.params;
-  const targetCategory = await Category.findById(categoryId);
+  const targetCategory = await Category.findById(categoryId).populate(
+    "subCategories"
+  );
   if (!targetCategory) {
     const error = appError.create(
       "category not found",

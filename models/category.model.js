@@ -7,9 +7,7 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: "uploads/category-default.png",
     },
-    subCategories: [
-      { type: mongoose.Types.ObjectId, ref: "Subcategory", required: true },
-    ],
+    subCategories: [{ type: mongoose.Types.ObjectId, ref: "Subcategory" }],
   },
   {
     timestamps: true,
