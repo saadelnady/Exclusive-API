@@ -9,7 +9,10 @@ const productSchema = new mongoose.Schema(
     },
     productDescription: { type: String, required: true },
     productColors: { type: String },
-    productSizes: { type: String, enum: ["XS", "S", "M", "L", "XL"] },
+    productSizes: {
+      type: String,
+      enum: ["XS", "S", "M", "L", "XL", "XXL", "XXXl"],
+    },
     priceBeforeDiscount: String,
     finalPrice: String,
     discountPercentage: String,
