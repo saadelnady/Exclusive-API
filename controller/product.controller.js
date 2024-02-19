@@ -25,9 +25,6 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  products.forEach((product) => {
-    product.productImage = `${process.env.BAIS_URL}/${product.productImage}`;
-  });
 
   return res
     .status(200)

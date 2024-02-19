@@ -18,7 +18,7 @@ const Router = express.Router();
 
 Router.route("/")
   .get(getAllProducts)
-  .post(upload.single("productImage"), productValidation(), addProduct);
+  .post(upload.array("images", 5), productValidation(), addProduct);
 
 Router.route("/:productId")
   .get(getProduct)
