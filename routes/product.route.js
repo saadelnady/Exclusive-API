@@ -16,9 +16,11 @@ const upload = multer({ storage: storage, fileFilter });
 
 const Router = express.Router();
 
-Router.route("/")
-  .get(getAllProducts)
-  .post(upload.array("images", 5), productValidation(), addProduct);
+Router.route("/").get(getAllProducts).post(
+  upload.array("images", 11),
+  // productValidation()
+  addProduct
+);
 
 Router.route("/:productId")
   .get(getProduct)

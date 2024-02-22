@@ -4,15 +4,15 @@ const productSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
-    images: { type: [String], default: [] },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
-    subCategory: { type: mongoose.Schema.Types.ObjectId, ref: "Subcategory" },
-    productOwner: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
+    images: { type: [String] },
+    category: { type: mongoose.Types.ObjectId, ref: "Category" },
+    subCategory: { type: mongoose.Types.ObjectId, ref: "Subcategory" },
+    productOwner: { type: mongoose.Types.ObjectId, ref: "Seller" },
     options: [
       {
         size: { type: String },
-        color: { type: String, default: "#000000" },
-        stockCount: { type: Number, default: 0 },
+        color: { type: String },
+        stockCount: { type: String },
         price: {
           priceBeforeDiscount: { type: String },
           discountPercentage: { type: String },

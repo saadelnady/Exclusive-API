@@ -14,7 +14,6 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
   const limit = query.limit;
   const page = query.page;
   const skip = (page - 1) * limit;
-
   const products = await Product.find().limit(limit).skip(skip);
 
   if (!products) {
@@ -57,17 +56,28 @@ const getProduct = asyncWrapper(async (req, res, next) => {
 });
 
 const addProduct = asyncWrapper(async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.json({ status: httpStatusText.FAIL, errors: { errors } });
-  }
+  // const errors = validationResult(req);
+  // if (!errors.isEmpty()) {
+  //   return res.json({ status: httpStatusText.FAIL, errors: { errors } });
+  // }
 
   const newProduct = new Product({ ...req.body });
-  newProduct.productImage = req.file.filename;
+
+  if (req.files && req.files.length > 0) {
+    // Assuming each image's filename should be stored in an array field called 'images'
+    newProduct.images = req.files.map((file) => `uploads/${file?.filename}`);
+  }
+  if (req.body.options && Array.isArray(req.body.options)) {
+    console.log("req.body.options ------>", req.body.options);
+    newProduct.options = req.body.options;
+  }
+
   await newProduct.save();
-  return res
-    .status(201)
-    .json({ status: httpStatusText.SUCCESS, data: { product: newProduct } });
+  return res.status(201).json({
+    status: httpStatusText.SUCCESS,
+    data: { product: newProduct },
+    message: "Product added successfully",
+  });
 });
 
 const editProduct = asyncWrapper(async () => {});
