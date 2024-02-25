@@ -14,7 +14,10 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
   const limit = query.limit;
   const page = query.page;
   const skip = (page - 1) * limit;
-  const products = await Product.find().limit(limit).skip(skip);
+  const products = await Product.find()
+    .populate("productOwner")
+    .limit(limit)
+    .skip(skip);
 
   if (!products) {
     const error = appError.create(
@@ -43,7 +46,7 @@ const getProduct = asyncWrapper(async (req, res, next) => {
   }
   if (!targetProduct) {
     const error = appError.create(
-      "product n't found ",
+      "product n't found",
       400,
       httpStatusText.FAIL
     );
@@ -53,6 +56,28 @@ const getProduct = asyncWrapper(async (req, res, next) => {
   res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
+});
+
+const getSellerProducts = asyncWrapper(async (req, res, next) => {
+  const { sellerId, limit, page } = req.query;
+  const skip = (page - 1) * limit;
+  const sellerProducts = await Product.find({ productOwner: sellerId })
+    .limit(limit)
+    .skip(skip);
+
+  if (!sellerProducts) {
+    const error = appError.create(
+      "No products to show",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products: sellerProducts },
+    total: sellerProducts.length,
+  });
 });
 
 const addProduct = asyncWrapper(async (req, res, next) => {
@@ -89,4 +114,5 @@ module.exports = {
   addProduct,
   editProduct,
   deleteProduct,
+  getSellerProducts,
 };

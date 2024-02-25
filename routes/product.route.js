@@ -6,6 +6,7 @@ const {
   getProduct,
   editProduct,
   deleteProduct,
+  getSellerProducts,
 } = require("../controller/product.controller");
 const productValidation = require("../middlewares/productValidation");
 const { storage, fileFilter } = require("../utils/multer");
@@ -21,6 +22,7 @@ Router.route("/").get(getAllProducts).post(
   // productValidation()
   addProduct
 );
+Router.route("/sellerProducts").get(getSellerProducts);
 
 Router.route("/:productId")
   .get(getProduct)
