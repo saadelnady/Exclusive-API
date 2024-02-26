@@ -6,8 +6,6 @@ const httpStatusText = require("../utils/utils");
 const { storage, fileFilter } = require("../utils/multer");
 const multer = require("multer");
 
-const upload = multer({ storage: storage, fileFilter });
-
 const getAllProducts = asyncWrapper(async (req, res, next) => {
   const query = req.query;
 
@@ -105,7 +103,40 @@ const addProduct = asyncWrapper(async (req, res, next) => {
   });
 });
 
-const editProduct = asyncWrapper(async () => {});
+const editProduct = asyncWrapper(async (req, res, next) => {
+  const { productId } = req.params;
+  console.log("productId====>", productId);
+  const targetProduct = await Product.findById(productId);
+  if (!targetProduct) {
+    const error = appError.create(
+      "Product not found",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  const updatedProduct = await Product.findByIdAndUpdate(
+    productId,
+    {
+      $set: { ...req.body },
+    },
+    {
+      new: true,
+    }
+  );
+  if (req.files && req.files.length > 0) {
+    updatedProduct.images = req.files.map(
+      (file) => `uploads/${file?.filename}`
+    );
+  }
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { product: updatedProduct },
+    message: "Product updated successfully",
+  });
+});
 const deleteProduct = asyncWrapper(async () => {});
 
 module.exports = {

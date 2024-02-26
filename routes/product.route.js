@@ -26,7 +26,7 @@ Router.route("/sellerProducts").get(getSellerProducts);
 
 Router.route("/:productId")
   .get(getProduct)
-  .put(editProduct)
+  .put(upload.array("images", 11), editProduct)
   .delete(deleteProduct);
 
 module.exports = Router;
