@@ -55,7 +55,6 @@ const addSubCategory = asyncWrapper(async (req, res, next) => {
     _id: { $in: targetCategory.subCategories },
     title: subCategoryTitle,
   });
-  console.log("existingSubcategory", subCategoryExist);
   if (subCategoryExist) {
     const error = appError.create(
       "Subcategory with the same title already exists in the category",
@@ -107,12 +106,10 @@ const getSubCategory = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  res
-    .status(200)
-    .json({
-      status: httpStatusText.SUCCESS,
-      data: { subCategory: targetSubCategory },
-    });
+  res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { subCategory: targetSubCategory },
+  });
 });
 
 const editSubCategory = asyncWrapper(async (req, res, next) => {

@@ -91,7 +91,6 @@ const addProduct = asyncWrapper(async (req, res, next) => {
     newProduct.images = req.files.map((file) => `uploads/${file?.filename}`);
   }
   if (req.body.options && Array.isArray(req.body.options)) {
-    console.log("req.body.options ------>", req.body.options);
     newProduct.options = req.body.options;
   }
 
@@ -105,7 +104,6 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
 const editProduct = asyncWrapper(async (req, res, next) => {
   const { productId } = req.params;
-  console.log("productId====>", productId);
   const targetProduct = await Product.findById(productId);
   if (!targetProduct) {
     const error = appError.create(
@@ -116,20 +114,39 @@ const editProduct = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
+  let updateFields = { ...req.body };
+  const finalImages = [];
+
+  if (updateFields?.images) {
+    if (Array.isArray(updateFields?.images)) {
+      updateFields?.images.map((image) => {
+        finalImages.push(image);
+      });
+      finalImages.forEach((image, index) => {
+        // Remove "http://localhost:4000" from the beginning of each image URL
+        finalImages[index] = image.replace(/^http:\/\/localhost:4000\//, "");
+      });
+    } else {
+      finalImages.push(updateFields?.images);
+    }
+  }
+
+  if (req.files && req.files.length > 0) {
+    req.files.map((file) => {
+      finalImages.push(`uploads/${file?.filename}`);
+    });
+  }
+
+  updateFields.images = finalImages;
   const updatedProduct = await Product.findByIdAndUpdate(
     productId,
     {
-      $set: { ...req.body },
+      $set: updateFields,
     },
     {
       new: true,
     }
   );
-  if (req.files && req.files.length > 0) {
-    updatedProduct.images = req.files.map(
-      (file) => `uploads/${file?.filename}`
-    );
-  }
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
@@ -137,7 +154,25 @@ const editProduct = asyncWrapper(async (req, res, next) => {
     message: "Product updated successfully",
   });
 });
-const deleteProduct = asyncWrapper(async () => {});
+const deleteProduct = asyncWrapper(async (req, res, next) => {
+  const { productId } = req.params;
+  const targetProduct = await Product.findById(productId);
+  if (!targetProduct) {
+    const error = appError.create(
+      "Product not found",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+  const deletedProduct = await Product.deleteOne({ _id: productId });
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { product: targetProduct },
+    message: "Product deleted successfully",
+  });
+});
 
 module.exports = {
   getAllProducts,
