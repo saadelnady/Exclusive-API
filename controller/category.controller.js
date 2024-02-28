@@ -22,7 +22,7 @@ const getAllCategories = asyncWrapper(async (req, res, next) => {
 
   const categoriesLength = allCategories.length;
 
-  if (!categories.length) {
+  if (categories.length === 0) {
     const error = appError.create(
       "No categories match the search criteria",
       404,

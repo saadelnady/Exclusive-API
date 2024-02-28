@@ -7,10 +7,8 @@ const { storage, fileFilter } = require("../utils/multer");
 const multer = require("multer");
 
 const getAllProducts = asyncWrapper(async (req, res, next) => {
-  const query = req.query;
+  const { limit, page } = req.query;
 
-  const limit = query.limit;
-  const page = query.page;
   const skip = (page - 1) * limit;
   const products = await Product.find()
     .populate("productOwner")
@@ -57,12 +55,18 @@ const getProduct = asyncWrapper(async (req, res, next) => {
 });
 
 const getSellerProducts = asyncWrapper(async (req, res, next) => {
-  const { sellerId, limit, page } = req.query;
+  const { sellerId, limit, page, text } = req.query;
   const skip = (page - 1) * limit;
-  const sellerProducts = await Product.find({ productOwner: sellerId })
+  const regex = new RegExp(text, "i");
+
+  const sellerProducts = await Product.find(
+    { title: regex, productOwner: sellerId },
+    { __v: false }
+  )
     .limit(limit)
     .skip(skip);
 
+  const allSellerProducts = await Product.find({ productOwner: sellerId });
   if (!sellerProducts) {
     const error = appError.create(
       "No products to show",
@@ -73,8 +77,7 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
   }
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { products: sellerProducts },
-    total: sellerProducts.length,
+    data: { products: sellerProducts, total: allSellerProducts.length },
   });
 });
 
@@ -86,6 +89,7 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
   const newProduct = new Product({ ...req.body });
 
+  console.log("req.body =========>", req.body);
   if (req.files && req.files.length > 0) {
     // Assuming each image's filename should be stored in an array field called 'images'
     newProduct.images = req.files.map((file) => `uploads/${file?.filename}`);
@@ -165,7 +169,7 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-  const deletedProduct = await Product.deleteOne({ _id: productId });
+  await Product.deleteOne({ _id: productId });
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
