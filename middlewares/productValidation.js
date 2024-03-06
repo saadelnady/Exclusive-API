@@ -1,22 +1,20 @@
 const { body } = require("express-validator");
 
-module.exports = (isEdit = false) => {
-  const validationRules = [
+const productValidation = () => {
+  return [
     body("title")
       .notEmpty()
       .withMessage("Product title is required")
-      .isLength({ min: 3, max: 50 })
-      .withMessage("Product title must be between 3 and 50 characters"),
+      .isLength({ min: 3, max: 100 })
+      .withMessage("Product title must be between 3 and 100 characters"),
 
     body("description")
       .notEmpty()
       .withMessage("Product description is required")
-      .isLength({ min: 10 })
-      .withMessage("Product description must be at least 10 characters"),
-
-    body("images")
-      .isArray({ min: 1 })
-      .withMessage("At least one image is required"),
+      .isLength({ min: 10, max: 500 })
+      .withMessage(
+        "Product description must be between 10 and 500 characters "
+      ),
 
     body("category")
       .notEmpty()
@@ -35,46 +33,35 @@ module.exports = (isEdit = false) => {
       .withMessage("Product owner is required")
       .isMongoId()
       .withMessage("Invalid product owner ID"),
+
+    body("options.*.size")
+      .notEmpty()
+      .withMessage("Size is required for all options"),
+
+    body("options.*.color")
+      .notEmpty()
+      .withMessage("Color is required for all options"),
+
+    body("options.*.stockCount")
+      .notEmpty()
+      .withMessage("stockCount is required for all options"),
+
+    body("options.*.price.priceBeforeDiscount")
+      .notEmpty()
+      .withMessage("priceBeforeDiscount is required for all options"),
+
+    body("options.*.price.discountPercentage")
+      .notEmpty()
+      .withMessage("priceBeforeDiscount is required for all options"),
+
+    body("options.*.price.finalPrice")
+      .notEmpty()
+      .withMessage("finalPrice is required for all options"),
+
+    body("options.*.price.discountValue")
+      .notEmpty()
+      .withMessage("discountValue is required for all options"),
   ];
-
-  // Additional validation rules for creation
-  if (!isEdit) {
-    validationRules.push(
-      body("options.*.size")
-        .optional()
-        .notEmpty()
-        .withMessage("Product option size is required"),
-
-      body("options.*.color")
-        .optional()
-        .notEmpty()
-        .withMessage("Product option color is required"),
-
-      body("options.*.stockCount")
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage(
-          "Product option stock count must be a non-negative integer"
-        ),
-
-      body("options.*.price.priceBeforeDiscount")
-        .optional()
-        .notEmpty()
-        .withMessage("Product option price before discount is required")
-        .isNumeric()
-        .withMessage("Product option price must be a number"),
-
-      body("options.*.price.discountPercentage")
-        .optional()
-        .isNumeric()
-        .withMessage("Product option discount percentage must be a number"),
-
-      body("options.*.price.discountValue")
-        .optional()
-        .isNumeric()
-        .withMessage("Product option discount value must be a number")
-    );
-  }
-
-  return validationRules;
 };
+
+module.exports = { productValidation };

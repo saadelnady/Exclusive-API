@@ -10,14 +10,14 @@ const productSchema = new mongoose.Schema(
     productOwner: { type: mongoose.Types.ObjectId, ref: "Seller" },
     options: [
       {
-        size: { type: String },
-        color: { type: String },
-        stockCount: { type: String },
+        size: { type: String, required: true },
+        color: { type: String, required: true },
+        stockCount: { type: String, required: true },
         price: {
-          priceBeforeDiscount: { type: String },
-          discountPercentage: { type: String },
-          finalPrice: { type: String },
-          discountValue: { type: String },
+          priceBeforeDiscount: { type: String, required: true },
+          discountPercentage: { type: String, required: true },
+          finalPrice: { type: String, required: true },
+          discountValue: { type: String, required: true },
         },
       },
     ],

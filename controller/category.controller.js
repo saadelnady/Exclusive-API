@@ -161,11 +161,11 @@ const deleteCategory = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const deletedCategory = await Category.deleteOne({ _id: categoryId });
+  await Category.deleteOne({ _id: categoryId });
   res.status(201).json({
     status: httpStatusText.SUCCESS,
     message: "category deleted Successfully",
-    data: { category: deletedCategory },
+    data: { category: targetCategory },
   });
 });
 

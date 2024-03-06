@@ -8,7 +8,8 @@ const {
   deleteProduct,
   getSellerProducts,
 } = require("../controller/product.controller");
-const productValidation = require("../middlewares/productValidation");
+
+const { productValidation } = require("../middlewares/productValidation");
 const { storage, fileFilter } = require("../utils/multer");
 
 const multer = require("multer");
@@ -17,16 +18,15 @@ const upload = multer({ storage: storage, fileFilter });
 
 const Router = express.Router();
 
-Router.route("/").get(getAllProducts).post(
-  upload.array("images", 11),
-  // productValidation()
-  addProduct
-);
+Router.route("/")
+  .get(getAllProducts)
+  .post(upload.array("images", 10), productValidation(), addProduct);
+
 Router.route("/sellerProducts").get(getSellerProducts);
 
 Router.route("/:productId")
   .get(getProduct)
-  .put(upload.array("images", 11), editProduct)
+  .put(upload.array("images", 10), productValidation(), editProduct)
   .delete(deleteProduct);
 
 module.exports = Router;

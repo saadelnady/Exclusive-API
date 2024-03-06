@@ -202,7 +202,7 @@ const deleteSubCategory = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const deletedSubCategory = await Subcategory.deleteOne({
+  await Subcategory.deleteOne({
     _id: subCategoryId,
   });
 
@@ -214,7 +214,7 @@ const deleteSubCategory = asyncWrapper(async (req, res, next) => {
   res.status(201).json({
     status: httpStatusText.SUCCESS,
     message: "Subcategory deleted Successfully",
-    data: { SubCategory: deletedSubCategory },
+    data: { SubCategory: targetSubCategory },
   });
 });
 
