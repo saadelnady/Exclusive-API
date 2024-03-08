@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const productRoles = require("../utils/productStatus");
 
 const productSchema = new mongoose.Schema(
   {
@@ -21,6 +22,13 @@ const productSchema = new mongoose.Schema(
         },
       },
     ],
+    status: {
+      type: String,
+      enum: [productRoles.ACCEPTED, productRoles.BLOCKED, productRoles.PENDING],
+      default: "pending",
+    },
+    isFlashSale: { type: Boolean, default: false },
+    flashSaleExpirationDate: { type: String },
   },
   { timestamps: true }
 );

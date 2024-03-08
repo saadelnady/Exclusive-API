@@ -3,12 +3,16 @@ const asyncWrapper = require("../middlewares/asyncWrapper");
 const Product = require("../models/product.model");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
+const productStatus = require("../utils/productStatus");
 
 const getAllProducts = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
 
   const skip = (page - 1) * limit;
-  const products = await Product.find()
+  const products = await Product.find(
+    { status: productStatus.ACCEPTED },
+    { __v: false }
+  )
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
@@ -52,13 +56,110 @@ const getProduct = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
 });
 
+const getProductsAddRequests = asyncWrapper(async (req, res, next) => {
+  // const { limit, page } = req.query;
+
+  // const skip = (page - 1) * limit;
+  const pendingProducts = await Product.find(
+    {
+      // title: regex,
+      status: productStatus.PENDING,
+    },
+    { __v: false }
+  ).populate("productOwner");
+  // .limit(limit)
+  // .skip(skip);
+
+  if (!pendingProducts) {
+    const error = appError.create(
+      "No pending products to show",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products: pendingProducts },
+  });
+});
+
+// const acceptProductRequest = asyncWrapper(async (req, res, next) => {
+//   const productId = req.params.productId;
+//   if (!productId) {
+//     const error = appError.create(
+//       "ProductId is required",
+//       400,
+//       httpStatusText.FAIL
+//     );
+//     return next(error);
+//   }
+
+//   // Update product status to accepted
+//   const updatedProduct = await Product.findOneAndUpdate(
+//     { _id: productId },
+//     { status: productStatus.ACCEPTED },
+//     { new: true }
+//   );
+
+//   if (!updatedProduct) {
+//     const error = appError.create(
+//       "Product not found",
+//       404,
+//       httpStatusText.FAIL
+//     );
+//     return next(error);
+//   }
+
+//   return res.status(200).json({
+//     status: httpStatusText.SUCCESS,
+//     data: { updatedProduct },
+//     message: "Product accepted successfully",
+//   });
+// });
+
+// const blockProductRequest = asyncWrapper(async (req, res, next) => {
+//   const productId = req.params.productId;
+//   if (!productId) {
+//     const error = appError.create(
+//       "ProductId is required",
+//       400,
+//       httpStatusText.FAIL
+//     );
+//     return next(error);
+//   }
+
+//   // Update product status to accepted
+//   const updatedProduct = await Product.findOneAndUpdate(
+//     { _id: productId },
+//     { status: productStatus.BLOCKED },
+//     { new: true }
+//   );
+
+//   if (!updatedProduct) {
+//     const error = appError.create(
+//       "Product not found",
+//       404,
+//       httpStatusText.FAIL
+//     );
+//     return next(error);
+//   }
+
+//   return res.status(200).json({
+//     status: httpStatusText.SUCCESS,
+//     data: { updatedProduct },
+//     message: "Product Blocked successfully",
+//   });
+// });
+
 const getSellerProducts = asyncWrapper(async (req, res, next) => {
   const { sellerId, limit, page, text } = req.query;
   const skip = (page - 1) * limit;
   const regex = new RegExp(text, "i");
 
   const sellerProducts = await Product.find(
-    { title: regex, productOwner: sellerId },
+    { title: regex, productOwner: sellerId, status: productStatus.ACCEPTED },
     { __v: false }
   )
     .limit(limit)
@@ -171,6 +272,7 @@ const editProduct = asyncWrapper(async (req, res, next) => {
     message: "Product updated successfully",
   });
 });
+
 const deleteProduct = asyncWrapper(async (req, res, next) => {
   const { productId } = req.params;
   const targetProduct = await Product.findById(productId);
@@ -198,4 +300,7 @@ module.exports = {
   editProduct,
   deleteProduct,
   getSellerProducts,
+  getProductsAddRequests,
+  // acceptProductRequest,
+  // blockProductRequest,
 };
