@@ -8,8 +8,9 @@ const {
   deleteProduct,
   getSellerProducts,
   getProductsAddRequests,
-  // acceptProductRequest,
-  // blockProductRequest,
+  acceptProductRequest,
+  blockProductRequest,
+  getBlockedProducts,
 } = require("../controller/product.controller");
 
 const allowedTo = require("../middlewares/alloewdTo");
@@ -31,6 +32,10 @@ Router.route("/productsAddRequests").get(
   // allowedTo(userRoles.ADMIN),
   getProductsAddRequests
 );
+Router.route("/blockedProducts").get(
+  // allowedTo(userRoles.ADMIN),
+  getBlockedProducts
+);
 Router.route("/sellerProducts").get(getSellerProducts);
 
 Router.route("/:productId")
@@ -38,12 +43,12 @@ Router.route("/:productId")
   .put(upload.array("images", 10), productValidation(), editProduct)
   .delete(deleteProduct);
 
-// Router.route("/acceptProduct/:productId").put(
-//   allowedTo(userRoles.ADMIN),
-//   acceptProductRequest
-// );
-// Router.route("/blockProduct/:productId").put(
-//   allowedTo(userRoles.ADMIN),
-//   blockProductRequest
-// );
+Router.route("/acceptProduct/:productId").put(
+  // allowedTo(userRoles.ADMIN),
+  acceptProductRequest
+);
+Router.route("/blockProduct/:productId").put(
+  // allowedTo(userRoles.ADMIN),
+  blockProductRequest
+);
 module.exports = Router;

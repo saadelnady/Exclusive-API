@@ -33,7 +33,9 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
 
 const getProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
-  const targetProduct = await Product.findById(productId);
+  const targetProduct = await Product.findById(productId).populate(
+    "productOwner"
+  );
   if (!productId) {
     const error = appError.create(
       "ProductId is required",
@@ -85,73 +87,73 @@ const getProductsAddRequests = asyncWrapper(async (req, res, next) => {
   });
 });
 
-// const acceptProductRequest = asyncWrapper(async (req, res, next) => {
-//   const productId = req.params.productId;
-//   if (!productId) {
-//     const error = appError.create(
-//       "ProductId is required",
-//       400,
-//       httpStatusText.FAIL
-//     );
-//     return next(error);
-//   }
+const acceptProductRequest = asyncWrapper(async (req, res, next) => {
+  const productId = req.params.productId;
+  if (!productId) {
+    const error = appError.create(
+      "ProductId is required",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
 
-//   // Update product status to accepted
-//   const updatedProduct = await Product.findOneAndUpdate(
-//     { _id: productId },
-//     { status: productStatus.ACCEPTED },
-//     { new: true }
-//   );
+  // Update product status to accepted
+  const updatedProduct = await Product.findOneAndUpdate(
+    { _id: productId },
+    { status: productStatus.ACCEPTED },
+    { new: true }
+  );
 
-//   if (!updatedProduct) {
-//     const error = appError.create(
-//       "Product not found",
-//       404,
-//       httpStatusText.FAIL
-//     );
-//     return next(error);
-//   }
+  if (!updatedProduct) {
+    const error = appError.create(
+      "Product not found",
+      404,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
 
-//   return res.status(200).json({
-//     status: httpStatusText.SUCCESS,
-//     data: { updatedProduct },
-//     message: "Product accepted successfully",
-//   });
-// });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { product: updatedProduct },
+    message: "Product accepted successfully",
+  });
+});
 
-// const blockProductRequest = asyncWrapper(async (req, res, next) => {
-//   const productId = req.params.productId;
-//   if (!productId) {
-//     const error = appError.create(
-//       "ProductId is required",
-//       400,
-//       httpStatusText.FAIL
-//     );
-//     return next(error);
-//   }
+const blockProductRequest = asyncWrapper(async (req, res, next) => {
+  const productId = req.params.productId;
+  if (!productId) {
+    const error = appError.create(
+      "ProductId is required",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
 
-//   // Update product status to accepted
-//   const updatedProduct = await Product.findOneAndUpdate(
-//     { _id: productId },
-//     { status: productStatus.BLOCKED },
-//     { new: true }
-//   );
+  // Update product status to accepted
+  const updatedProduct = await Product.findOneAndUpdate(
+    { _id: productId },
+    { status: productStatus.BLOCKED },
+    { new: true }
+  );
 
-//   if (!updatedProduct) {
-//     const error = appError.create(
-//       "Product not found",
-//       404,
-//       httpStatusText.FAIL
-//     );
-//     return next(error);
-//   }
+  if (!updatedProduct) {
+    const error = appError.create(
+      "Product not found",
+      404,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
 
-//   return res.status(200).json({
-//     status: httpStatusText.SUCCESS,
-//     data: { updatedProduct },
-//     message: "Product Blocked successfully",
-//   });
-// });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { product: updatedProduct },
+    message: "Product Blocked successfully",
+  });
+});
 
 const getSellerProducts = asyncWrapper(async (req, res, next) => {
   const { sellerId, limit, page, text } = req.query;
@@ -210,6 +212,32 @@ const addProduct = asyncWrapper(async (req, res, next) => {
     data: { product: newProduct },
     message: "Product added successfully",
   });
+});
+
+const getBlockedProducts = asyncWrapper(async (req, res, next) => {
+  const { limit, page } = req.query;
+
+  const skip = (page - 1) * limit;
+  const products = await Product.find(
+    { status: productStatus.BLOCKED },
+    { __v: false }
+  )
+    .populate("productOwner")
+    .limit(limit)
+    .skip(skip);
+
+  if (!products) {
+    const error = appError.create(
+      "No products to show",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  return res
+    .status(200)
+    .json({ status: httpStatusText.SUCCESS, data: { products } });
 });
 
 const editProduct = asyncWrapper(async (req, res, next) => {
@@ -301,6 +329,7 @@ module.exports = {
   deleteProduct,
   getSellerProducts,
   getProductsAddRequests,
-  // acceptProductRequest,
-  // blockProductRequest,
+  acceptProductRequest,
+  blockProductRequest,
+  getBlockedProducts,
 };
