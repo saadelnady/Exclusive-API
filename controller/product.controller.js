@@ -33,9 +33,10 @@ const getAllProducts = asyncWrapper(async (req, res, next) => {
 
 const getProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
-  const targetProduct = await Product.findById(productId).populate(
-    "productOwner"
-  );
+  const targetProduct = await Product.findById(productId)
+    .populate("category")
+    .populate("subCategory")
+    .populate("productOwner");
   if (!productId) {
     const error = appError.create(
       "ProductId is required",
