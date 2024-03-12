@@ -1,13 +1,13 @@
 const express = require("express");
 
 const {
-  getAllProducts,
+  getAcceptedProducts,
   addProduct,
   getProduct,
   editProduct,
   deleteProduct,
   getSellerProducts,
-  getProductsAddRequests,
+  getPendingProducts,
   acceptProductRequest,
   blockProductRequest,
   getBlockedProducts,
@@ -25,12 +25,12 @@ const upload = multer({ storage: storage, fileFilter });
 const Router = express.Router();
 
 Router.route("/")
-  .get(getAllProducts)
+  .get(getAcceptedProducts)
   .post(upload.array("images", 10), productValidation(), addProduct);
 
-Router.route("/productsAddRequests").get(
+Router.route("/pendingProducts").get(
   // allowedTo(userRoles.ADMIN),
-  getProductsAddRequests
+  getPendingProducts
 );
 Router.route("/blockedProducts").get(
   // allowedTo(userRoles.ADMIN),

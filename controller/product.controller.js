@@ -5,7 +5,7 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const productStatus = require("../utils/productStatus");
 
-const getAllProducts = asyncWrapper(async (req, res, next) => {
+const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
 
   const skip = (page - 1) * limit;
@@ -59,19 +59,29 @@ const getProduct = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
 });
 
-const getProductsAddRequests = asyncWrapper(async (req, res, next) => {
-  // const { limit, page } = req.query;
+const getPendingProducts = asyncWrapper(async (req, res, next) => {
+  const { limit, page, text } = req.query;
 
-  // const skip = (page - 1) * limit;
+  const skip = (page - 1) * limit;
+  const regex = new RegExp(text, "i");
+
   const pendingProducts = await Product.find(
     {
-      // title: regex,
+      title: regex,
+      status: productStatus.PENDING,
+    },
+    { __v: false }
+  )
+    .populate("productOwner")
+    .limit(limit)
+    .skip(skip);
+
+  const allPendingProducts = await Product.find(
+    {
       status: productStatus.PENDING,
     },
     { __v: false }
   ).populate("productOwner");
-  // .limit(limit)
-  // .skip(skip);
 
   if (!pendingProducts) {
     const error = appError.create(
@@ -84,7 +94,7 @@ const getProductsAddRequests = asyncWrapper(async (req, res, next) => {
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { products: pendingProducts },
+    data: { products: pendingProducts, total: allPendingProducts.length },
   });
 });
 
@@ -211,21 +221,28 @@ const addProduct = asyncWrapper(async (req, res, next) => {
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
     data: { product: newProduct },
-    message: "Product added successfully",
+    message: "Your product is under revision",
   });
 });
 
 const getBlockedProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page } = req.query;
+  const { limit, page, text } = req.query;
 
   const skip = (page - 1) * limit;
+  const regex = new RegExp(text, "i");
+
   const products = await Product.find(
-    { status: productStatus.BLOCKED },
+    { title: regex, status: productStatus.BLOCKED },
     { __v: false }
   )
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
+
+  const allBlockedProducts = await Product.find(
+    { status: productStatus.BLOCKED },
+    { __v: false }
+  );
 
   if (!products) {
     const error = appError.create(
@@ -236,9 +253,10 @@ const getBlockedProducts = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  return res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { products } });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products, total: allBlockedProducts.length },
+  });
 });
 
 const editProduct = asyncWrapper(async (req, res, next) => {
@@ -323,13 +341,13 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
 });
 
 module.exports = {
-  getAllProducts,
+  getAcceptedProducts,
   getProduct,
   addProduct,
   editProduct,
   deleteProduct,
   getSellerProducts,
-  getProductsAddRequests,
+  getPendingProducts,
   acceptProductRequest,
   blockProductRequest,
   getBlockedProducts,
