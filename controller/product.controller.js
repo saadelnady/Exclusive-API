@@ -6,16 +6,22 @@ const httpStatusText = require("../utils/utils");
 const productStatus = require("../utils/productStatus");
 
 const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page } = req.query;
+  const { limit, page, text } = req.query;
+  const regex = new RegExp(text, "i");
 
   const skip = (page - 1) * limit;
   const products = await Product.find(
-    { status: productStatus.ACCEPTED },
+    { title: regex, status: productStatus.ACCEPTED },
     { __v: false }
   )
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
+
+  const allAcceptedProducts = await Product.find(
+    { status: productStatus.ACCEPTED },
+    { __v: false }
+  );
 
   if (!products) {
     const error = appError.create(
@@ -26,9 +32,10 @@ const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  return res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { products } });
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products, total: allAcceptedProducts.length },
+  });
 });
 
 const getProduct = asyncWrapper(async (req, res, next) => {
