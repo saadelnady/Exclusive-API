@@ -54,7 +54,7 @@ const updateUser = asyncWrapper(async (req, res, next) => {
 });
 
 const getUserProfile = asyncWrapper(async (req, res, next) => {
-  const currentId = req.currentUser.id;
+  const currentId = req.current.id;
   const targetUser = await User.findById(currentId, { password: false });
   if (!targetUser) {
     const error = appError.create("user not found", 404, httpStatusText.FAIL);
@@ -190,9 +190,9 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 });
 
 const activateUser = asyncWrapper(async (req, res, next) => {
-  const { currentUser } = req;
+  const { current } = req;
 
-  res.status(200).json({ currentUser });
+  res.status(200).json({ current });
 });
 
 module.exports = {

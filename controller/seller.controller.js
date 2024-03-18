@@ -7,6 +7,7 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
+const productStatus = require("../utils/productStatus");
 
 const sellerRegister = asyncWrapper(async (req, res, next) => {
   const { firstName, lastName, email, mobilePhone, password } = req.body;
@@ -108,9 +109,11 @@ const sellerLogin = asyncWrapper(async (req, res, next) => {
   }
 });
 
-const getSellerProfile = asyncWrapper(async (req, res, next) => {
-  const currentId = req.currentUser.id;
-  const targetSeller = await Seller.findById(currentId, { password: false });
+const getSeller = asyncWrapper(async (req, res, next) => {
+  const { sellerId } = req.params;
+  const targetSeller = await Seller.findById(sellerId, {
+    password: false,
+  });
 
   if (!targetSeller) {
     const error = appError.create(
@@ -124,6 +127,42 @@ const getSellerProfile = asyncWrapper(async (req, res, next) => {
   res
     .status(200)
     .json({ status: httpStatusText.SUCCESS, data: { seller: targetSeller } });
+});
+
+const getSellerProducts = asyncWrapper(async (req, res, next) => {
+  const { sellerId, status } = req.query;
+
+  // Convert status string to array if it's provided in the query
+  const targetStatus = [
+    productRoles.ACCEPTED,
+    productRoles.BLOCKED,
+    productRoles.PENDING,
+  ].includes(status);
+
+  // Find the target seller and filter products by status
+  if (targetStatus) {
+    const targetSeller = await Seller.findById(sellerId, {
+      password: false,
+    }).populate({
+      path: "products",
+      match: { status: { $in: targetStatus } }, // Filter products by status
+    });
+  }
+
+  if (!targetSeller) {
+    const error = appError.create(
+      "Seller not found",
+      404,
+      httpStatusText.NOT_FOUND
+    );
+    return next(error);
+  }
+
+  const targetSellerProducts = targetSeller.products;
+  res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products: targetSellerProducts },
+  });
 });
 
 const getAllSellers = asyncWrapper(async (req, res, next) => {
@@ -166,7 +205,7 @@ const deleteSeller = asyncWrapper(async (req, res, next) => {
   });
 });
 
-const updateSeller = asyncWrapper(async (req, res, next) => {
+const editSeller = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -194,11 +233,32 @@ const updateSeller = asyncWrapper(async (req, res, next) => {
   });
 });
 
+const getSellerProfile = asyncWrapper(async (req, res, next) => {
+  const sellerId = req.current.id;
+  const targetSeller = await Seller.findById(sellerId, {
+    password: false,
+  });
+
+  if (!targetSeller) {
+    const error = appError.create(
+      "seller not found",
+      400,
+      httpStatusText.ERROR
+    );
+    return next(error);
+  }
+
+  res
+    .status(200)
+    .json({ status: httpStatusText.SUCCESS, data: { seller: targetSeller } });
+});
+
 module.exports = {
   sellerRegister,
   sellerLogin,
-  getSellerProfile,
-  updateSeller,
+  getSeller,
+  editSeller,
   getAllSellers,
   deleteSeller,
+  getSellerProfile,
 };

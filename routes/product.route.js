@@ -8,8 +8,9 @@ const {
   deleteProduct,
   getSellerProducts,
   getPendingProducts,
-  acceptProductRequest,
-  blockProductRequest,
+  acceptProduct,
+  blockProduct,
+  unblockProduct,
   getBlockedProducts,
 } = require("../controller/product.controller");
 
@@ -36,6 +37,7 @@ Router.route("/blockedProducts").get(
   // allowedTo(userRoles.ADMIN),
   getBlockedProducts
 );
+
 Router.route("/sellerProducts").get(getSellerProducts);
 
 Router.route("/:productId")
@@ -45,10 +47,14 @@ Router.route("/:productId")
 
 Router.route("/acceptProduct/:productId").put(
   // allowedTo(userRoles.ADMIN),
-  acceptProductRequest
+  acceptProduct
 );
 Router.route("/blockProduct/:productId").put(
   // allowedTo(userRoles.ADMIN),
-  blockProductRequest
+  blockProduct
+);
+Router.route("/unblockProduct/:productId").put(
+  // allowedTo(userRoles.ADMIN),
+  unblockProduct
 );
 module.exports = Router;

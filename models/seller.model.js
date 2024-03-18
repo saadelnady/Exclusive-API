@@ -27,6 +27,7 @@ const sellerSchema = new mongoose.Schema(
     },
     token: { type: String },
     role: { type: String, default: userRoles.SELLER },
+    products: [{ type: mongoose.Types.ObjectId, ref: "Product" }],
   },
   {
     timestamps: true,

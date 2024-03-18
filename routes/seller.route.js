@@ -6,11 +6,13 @@ const {
 const {
   sellerRegister,
   sellerLogin,
-  getSellerProfile,
-  updateSeller,
+  getSeller,
+  editSeller,
   getAllSellers,
   deleteSeller,
+  getSellerProfile,
 } = require("../controller/seller.controller");
+
 const verifyToken = require("../middlewares/verifyToken");
 const updateValidation = require("../middlewares/updateValidation");
 const userRoles = require("../utils/user.roles");
@@ -20,10 +22,13 @@ const router = express.Router();
 router.route("/").get(verifyToken, alloewdTo(userRoles.ADMIN), getAllSellers);
 router.route("/register").post(registerValidation(), sellerRegister);
 router.route("/login").post(loginValidation(), sellerLogin);
+
+router.route("/getSellerProfile").get(verifyToken, getSellerProfile);
+
 router
-  .route("/getSellerProfile")
-  .get(verifyToken, getSellerProfile)
-  .put(verifyToken, updateValidation(), updateSeller)
+  .route("/:sellerId")
+  .get(verifyToken, getSeller)
+  .put(verifyToken, updateValidation(), editSeller)
   .delete(verifyToken, alloewdTo(userRoles.ADMIN), deleteSeller);
 
 module.exports = router;

@@ -7,7 +7,6 @@ const verifyToken = (req, res, next) => {
 
   // const token = authHeaders.split(" ")[1];
   const token = req.body.activationToken || req.headers.token;
-
   if (!token) {
     const error = appError.create(
       "Please , login to continue",
@@ -18,9 +17,9 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    const currentUser = jwt.verify(token, process.env.jwt_secret_key);
+    const current = jwt.verify(token, process.env.jwt_secret_key);
 
-    req.currentUser = currentUser;
+    req.current = current;
     next();
   } catch (err) {
     const error = appError.create("invalid token", 400, httpStatusText.ERROR);
