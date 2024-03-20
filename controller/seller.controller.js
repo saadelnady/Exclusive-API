@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
+const productRoles = require("../utils/productStatus");
 
 const asyncWrapper = require("../middlewares/asyncWrapper");
 const Seller = require("../models/seller.model");
@@ -132,22 +133,21 @@ const getSeller = asyncWrapper(async (req, res, next) => {
 const getSellerProducts = asyncWrapper(async (req, res, next) => {
   const { sellerId, status } = req.query;
 
-  // Convert status string to array if it's provided in the query
   const targetStatus = [
     productRoles.ACCEPTED,
     productRoles.BLOCKED,
     productRoles.PENDING,
   ].includes(status);
 
+  console.log("targetStatus  ", targetStatus);
   // Find the target seller and filter products by status
-  if (targetStatus) {
-    const targetSeller = await Seller.findById(sellerId, {
-      password: false,
-    }).populate({
-      path: "products",
-      match: { status: { $in: targetStatus } }, // Filter products by status
-    });
-  }
+
+  const targetSeller = await Seller.findById(sellerId, {
+    password: false,
+  }).populate({
+    path: "products",
+    match: { status: { $in: status } }, // Filter products by status
+  });
 
   if (!targetSeller) {
     const error = appError.create(
@@ -157,11 +157,19 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+  if (!targetStatus) {
+    const error = appError.create(
+      "target status not found",
+      404,
+      httpStatusText.NOT_FOUND
+    );
+    return next(error);
+  }
 
-  const targetSellerProducts = targetSeller.products;
+  console.log("products === ", targetSeller.products);
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { products: targetSellerProducts },
+    data: { products: targetSeller.products },
   });
 });
 
@@ -261,4 +269,5 @@ module.exports = {
   getAllSellers,
   deleteSeller,
   getSellerProfile,
+  getSellerProducts,
 };

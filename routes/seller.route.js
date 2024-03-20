@@ -11,6 +11,7 @@ const {
   getAllSellers,
   deleteSeller,
   getSellerProfile,
+  getSellerProducts,
 } = require("../controller/seller.controller");
 
 const verifyToken = require("../middlewares/verifyToken");
@@ -24,6 +25,8 @@ router.route("/register").post(registerValidation(), sellerRegister);
 router.route("/login").post(loginValidation(), sellerLogin);
 
 router.route("/getSellerProfile").get(verifyToken, getSellerProfile);
+
+router.route("/getSellerProducts").get(verifyToken, getSellerProducts);
 
 router
   .route("/:sellerId")

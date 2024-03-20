@@ -38,35 +38,6 @@ const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
     data: { products, total: allAcceptedProducts.length },
   });
 });
-
-const getProduct = asyncWrapper(async (req, res, next) => {
-  const productId = req.params.productId;
-  const targetProduct = await Product.findById(productId)
-    .populate("category")
-    .populate("subCategory")
-    .populate("productOwner");
-  if (!productId) {
-    const error = appError.create(
-      "ProductId is required",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-  if (!targetProduct) {
-    const error = appError.create(
-      "product n't found",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-
-  res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
-});
-
 const getPendingProducts = asyncWrapper(async (req, res, next) => {
   const { limit, page, text } = req.query;
 
@@ -105,6 +76,69 @@ const getPendingProducts = asyncWrapper(async (req, res, next) => {
     data: { products: pendingProducts, total: allPendingProducts.length },
   });
 });
+const getBlockedProducts = asyncWrapper(async (req, res, next) => {
+  const { limit, page, text } = req.query;
+
+  const skip = (page - 1) * limit;
+  const regex = new RegExp(text, "i");
+
+  const products = await Product.find(
+    { title: regex, status: productStatus.BLOCKED },
+    { __v: false }
+  )
+    .populate("productOwner")
+    .limit(limit)
+    .skip(skip);
+
+  const allBlockedProducts = await Product.find(
+    { status: productStatus.BLOCKED },
+    { __v: false }
+  );
+
+  if (!products) {
+    const error = appError.create(
+      "No products to show",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products, total: allBlockedProducts.length },
+  });
+});
+// =======================================================================================
+
+const getProduct = asyncWrapper(async (req, res, next) => {
+  const productId = req.params.productId;
+  const targetProduct = await Product.findById(productId)
+    .populate("category")
+    .populate("subCategory")
+    .populate("productOwner");
+  if (!productId) {
+    const error = appError.create(
+      "ProductId is required",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+  if (!targetProduct) {
+    const error = appError.create(
+      "product n't found",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  res
+    .status(200)
+    .json({ status: httpStatusText.SUCCESS, data: { product: targetProduct } });
+});
+// =======================================================================================
 
 const acceptProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
@@ -216,8 +250,9 @@ const unblockProduct = asyncWrapper(async (req, res, next) => {
     message: "Product unBlocked successfully",
   });
 });
+// =======================================================================================
 
-const getSellerProducts = asyncWrapper(async (req, res, next) => {
+const getAcceptedSellerProducts = asyncWrapper(async (req, res, next) => {
   const { sellerId, limit, page, text } = req.query;
   const skip = (page - 1) * limit;
   const regex = new RegExp(text, "i");
@@ -246,6 +281,8 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
     data: { products: sellerProducts, total: allSellerProducts.length },
   });
 });
+
+// =======================================================================================
 
 const addProduct = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -294,40 +331,6 @@ const addProduct = asyncWrapper(async (req, res, next) => {
     status: httpStatusText.SUCCESS,
     data: { product: newProduct },
     message: "Your product is under revision",
-  });
-});
-
-const getBlockedProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text } = req.query;
-
-  const skip = (page - 1) * limit;
-  const regex = new RegExp(text, "i");
-
-  const products = await Product.find(
-    { title: regex, status: productStatus.BLOCKED },
-    { __v: false }
-  )
-    .populate("productOwner")
-    .limit(limit)
-    .skip(skip);
-
-  const allBlockedProducts = await Product.find(
-    { status: productStatus.BLOCKED },
-    { __v: false }
-  );
-
-  if (!products) {
-    const error = appError.create(
-      "No products to show",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-
-  return res.status(200).json({
-    status: httpStatusText.SUCCESS,
-    data: { products, total: allBlockedProducts.length },
   });
 });
 
@@ -435,10 +438,10 @@ module.exports = {
   addProduct,
   editProduct,
   deleteProduct,
-  getSellerProducts,
-  getPendingProducts,
   acceptProduct,
   blockProduct,
   unblockProduct,
   getBlockedProducts,
+  getPendingProducts,
+  getAcceptedSellerProducts,
 };

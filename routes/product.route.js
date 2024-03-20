@@ -6,7 +6,7 @@ const {
   getProduct,
   editProduct,
   deleteProduct,
-  getSellerProducts,
+  getAcceptedSellerProducts,
   getPendingProducts,
   acceptProduct,
   blockProduct,
@@ -38,7 +38,7 @@ Router.route("/blockedProducts").get(
   getBlockedProducts
 );
 
-Router.route("/sellerProducts").get(getSellerProducts);
+Router.route("/acceptedSellerProducts").get(getAcceptedSellerProducts);
 
 Router.route("/:productId")
   .get(getProduct)
