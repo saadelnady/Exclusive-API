@@ -7,13 +7,17 @@ const Subcategory = require("../models/subCategory.model");
 const Category = require("../models/category.model");
 
 const getAllSubCategories = asyncWrapper(async (req, res, next) => {
-  const { limit, page } = req.query;
+  const { limit, page, text } = req.query;
   const skip = (page - 1) * limit;
+
+  const regex = new RegExp(text, "i");
+
   const subCategories = await subCategory
-    .find({}, { __v: false })
+    .find({ title: regex }, { __v: false })
     .populate("category")
     .limit(limit)
     .skip(skip);
+
   const allSubCategories = await subCategory.find({}, { __v: false });
 
   const subCategorieslength = allSubCategories.length;

@@ -139,9 +139,6 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
     productRoles.PENDING,
   ].includes(status);
 
-  console.log("targetStatus  ", targetStatus);
-  // Find the target seller and filter products by status
-
   const targetSeller = await Seller.findById(sellerId, {
     password: false,
   }).populate({
@@ -166,10 +163,12 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  console.log("products === ", targetSeller.products);
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { products: targetSeller.products },
+    data: {
+      products: targetSeller.products,
+      total: targetSeller.products.length,
+    },
   });
 });
 

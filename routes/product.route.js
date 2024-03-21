@@ -1,7 +1,7 @@
 const express = require("express");
 
 const {
-  getAcceptedProducts,
+  getProducts,
   addProduct,
   getProduct,
   editProduct,
@@ -26,17 +26,8 @@ const upload = multer({ storage: storage, fileFilter });
 const Router = express.Router();
 
 Router.route("/")
-  .get(getAcceptedProducts)
+  .get(getProducts)
   .post(upload.array("images", 10), productValidation(), addProduct);
-
-Router.route("/pendingProducts").get(
-  // allowedTo(userRoles.ADMIN),
-  getPendingProducts
-);
-Router.route("/blockedProducts").get(
-  // allowedTo(userRoles.ADMIN),
-  getBlockedProducts
-);
 
 Router.route("/acceptedSellerProducts").get(getAcceptedSellerProducts);
 

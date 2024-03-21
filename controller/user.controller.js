@@ -27,7 +27,7 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
     .json({ status: httpStatusText.SUCCESS, data: { users } });
 });
 
-const updateUser = asyncWrapper(async (req, res, next) => {
+const editUser = asyncWrapper(async (req, res, next) => {
   const { userId } = req.params;
   const targetUser = await User.findById(userId);
   if (!targetUser) {
@@ -200,7 +200,7 @@ module.exports = {
   getUserProfile,
   userRegister,
   userLogin,
-  updateUser,
+  editUser,
   deleteUser,
   activateUser,
 };

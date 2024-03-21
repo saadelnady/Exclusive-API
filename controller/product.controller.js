@@ -6,23 +6,16 @@ const httpStatusText = require("../utils/utils");
 const productStatus = require("../utils/productStatus");
 const Seller = require("../models/seller.model");
 
-const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text } = req.query;
+const getProducts = asyncWrapper(async (req, res, next) => {
+  const { limit, page, text, status } = req.query;
   const regex = new RegExp(text, "i");
-
   const skip = (page - 1) * limit;
-  const products = await Product.find(
-    { title: regex, status: productStatus.ACCEPTED },
-    { __v: false }
-  )
+  const products = await Product.find({ title: regex, status }, { __v: false })
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
 
-  const allAcceptedProducts = await Product.find(
-    { status: productStatus.ACCEPTED },
-    { __v: false }
-  );
+  const allProducts = await Product.find({ status }, { __v: false });
 
   if (!products) {
     const error = appError.create(
@@ -35,80 +28,10 @@ const getAcceptedProducts = asyncWrapper(async (req, res, next) => {
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { products, total: allAcceptedProducts.length },
+    data: { products, total: allProducts.length },
   });
 });
-const getPendingProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text } = req.query;
 
-  const skip = (page - 1) * limit;
-  const regex = new RegExp(text, "i");
-
-  const pendingProducts = await Product.find(
-    {
-      title: regex,
-      status: productStatus.PENDING,
-    },
-    { __v: false }
-  )
-    .populate("productOwner")
-    .limit(limit)
-    .skip(skip);
-
-  const allPendingProducts = await Product.find(
-    {
-      status: productStatus.PENDING,
-    },
-    { __v: false }
-  ).populate("productOwner");
-
-  if (!pendingProducts) {
-    const error = appError.create(
-      "No pending products to show",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-
-  return res.status(200).json({
-    status: httpStatusText.SUCCESS,
-    data: { products: pendingProducts, total: allPendingProducts.length },
-  });
-});
-const getBlockedProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text } = req.query;
-
-  const skip = (page - 1) * limit;
-  const regex = new RegExp(text, "i");
-
-  const products = await Product.find(
-    { title: regex, status: productStatus.BLOCKED },
-    { __v: false }
-  )
-    .populate("productOwner")
-    .limit(limit)
-    .skip(skip);
-
-  const allBlockedProducts = await Product.find(
-    { status: productStatus.BLOCKED },
-    { __v: false }
-  );
-
-  if (!products) {
-    const error = appError.create(
-      "No products to show",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-
-  return res.status(200).json({
-    status: httpStatusText.SUCCESS,
-    data: { products, total: allBlockedProducts.length },
-  });
-});
 // =======================================================================================
 
 const getProduct = asyncWrapper(async (req, res, next) => {
@@ -433,7 +356,7 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
 });
 
 module.exports = {
-  getAcceptedProducts,
+  getProducts,
   getProduct,
   addProduct,
   editProduct,
@@ -441,7 +364,6 @@ module.exports = {
   acceptProduct,
   blockProduct,
   unblockProduct,
-  getBlockedProducts,
-  getPendingProducts,
+
   getAcceptedSellerProducts,
 };
