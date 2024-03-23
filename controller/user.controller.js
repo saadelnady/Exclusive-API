@@ -29,6 +29,7 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
 
 const editUser = asyncWrapper(async (req, res, next) => {
   const { userId } = req.params;
+
   const targetUser = await User.findById(userId);
   if (!targetUser) {
     const error = appError.create("user not found", 400, httpStatusText.FAIL);
@@ -38,6 +39,23 @@ const editUser = asyncWrapper(async (req, res, next) => {
     new: true,
   };
 
+  const { email, mobilePhone, newPassword, currentPassword } = req.body;
+
+  // Check if the provided email or mobilePhone already exists in the database
+  const existingUser = await User.findOne({
+    $or: [{ email: email }, { mobilePhone: mobilePhone }],
+    _id: { $ne: userId }, // Exclude the current user from the check
+  });
+
+  if (existingUser) {
+    const error = appError.create(
+      "Email or mobile phone already exists",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     {
@@ -46,11 +64,31 @@ const editUser = asyncWrapper(async (req, res, next) => {
     options
   );
 
-  updatedUser.image = req.file.filename;
+  if (newPassword && currentPassword) {
+    const matchedPassword = await bcrypt.compare(
+      currentPassword,
+      targetUser.password
+    );
+    if (!matchedPassword) {
+      const error = appError.create(
+        "current password is not correct ",
+        400,
+        httpStatusText.FAIL
+      );
+      return next(error);
+    }
+    updatedUser.password = newPassword;
+    await bcrypt.hash(updatedUser.password, 10);
+  }
 
-  return res
-    .status(200)
-    .json({ status: httpStatusText.SUCCESS, data: { user: updatedUser } });
+  if (req?.file?.filename) {
+    updatedUser.image = `uploads/${req?.file?.filename}`;
+  }
+  await updatedUser.save();
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { user: updatedUser, message: "Profile updated successfully" },
+  });
 });
 
 const getUserProfile = asyncWrapper(async (req, res, next) => {
