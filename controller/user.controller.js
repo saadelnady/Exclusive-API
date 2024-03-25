@@ -6,6 +6,7 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
+require("dotenv").config();
 
 const getAllUsers = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
@@ -29,6 +30,10 @@ const getAllUsers = asyncWrapper(async (req, res, next) => {
 
 const editUser = asyncWrapper(async (req, res, next) => {
   const { userId } = req.params;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
   const targetUser = await User.findById(userId);
   if (!targetUser) {
@@ -64,6 +69,8 @@ const editUser = asyncWrapper(async (req, res, next) => {
     options
   );
 
+  console.log("req.body ====>", req.body);
+
   if (newPassword && currentPassword) {
     const matchedPassword = await bcrypt.compare(
       currentPassword,
@@ -77,8 +84,9 @@ const editUser = asyncWrapper(async (req, res, next) => {
       );
       return next(error);
     }
-    updatedUser.password = newPassword;
-    await bcrypt.hash(updatedUser.password, 10);
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    updatedUser.password = hashedNewPassword;
   }
 
   if (req?.file?.filename) {
@@ -153,13 +161,13 @@ const userRegister = asyncWrapper(async (req, res, next) => {
   newUser.token = token;
   await newUser.save();
 
-  const activationUrl = `${process.env.BAIS_URL}/activation/${newUser.token}`;
+  // const activationUrl = `${process.env.BAIS_URL}/activation/${newUser.token}`;
 
-  await sendEmail({
-    email: newUser.email,
-    subject: "Activate your account",
-    message: `Hello ${newUser.firstName} , please click on the link to activate your account ${activationUrl}`,
-  });
+  // await sendEmail({
+  //   email: newUser.email,
+  //   subject: "Activate your account",
+  //   message: `Hello ${newUser.firstName} , please click on the link to activate your account ${activationUrl}`,
+  // });
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,

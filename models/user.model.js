@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
     },
     image: { type: String, default: "uploads/user-default.png" },
     mobilePhone: { type: String, unique: true, required: true },
-    address: { type: String },
+    address: { type: String, default: "" },
     email: {
       type: String,
       validator: [validator.isEmail, "Email must be valid email"],

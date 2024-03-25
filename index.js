@@ -17,6 +17,7 @@ const errorHandler = require("./middlewares/errorHandler");
 
 app.use(cors());
 app.use(express.json());
+
 // to preview image
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // app.use("/api/upload", uploadRouter);
