@@ -40,9 +40,6 @@ const editUser = asyncWrapper(async (req, res, next) => {
     const error = appError.create("user not found", 400, httpStatusText.FAIL);
     return next(error);
   }
-  const options = {
-    new: true,
-  };
 
   const { email, mobilePhone, newPassword, currentPassword } = req.body;
 
@@ -60,6 +57,10 @@ const editUser = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
+
+  const options = {
+    new: true,
+  };
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,

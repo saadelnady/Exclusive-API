@@ -11,12 +11,12 @@ const sendEmail = require("../utils/sendEmail");
 const productStatus = require("../utils/productStatus");
 
 const sellerRegister = asyncWrapper(async (req, res, next) => {
-  const { firstName, lastName, email, mobilePhone, password } = req.body;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+  const { firstName, lastName, email, mobilePhone, password } = req.body;
 
   const emailExist = await Seller.findOne({ email: email });
   const mobilePhoneExist = await Seller.findOne({ mobilePhone: mobilePhone });
@@ -58,13 +58,13 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
 
   await newSeller.save();
 
-  const activationUrl = `${process.env.BAIS_URL}/activation/${newSeller.token}`;
+  // const activationUrl = `${process.env.BAIS_URL}/activation/${newSeller.token}`;
 
-  await sendEmail({
-    email: newSeller.email,
-    subject: "Activate your account",
-    message: `Hello ${newSeller.firstName} , please click on the link to activate your account ${activationUrl}`,
-  });
+  // await sendEmail({
+  //   email: newSeller.email,
+  //   subject: "Activate your account",
+  //   message: `Hello ${newSeller.firstName} , please click on the link to activate your account ${activationUrl}`,
+  // });
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
@@ -213,15 +213,32 @@ const deleteSeller = asyncWrapper(async (req, res, next) => {
 });
 
 const editSeller = asyncWrapper(async (req, res, next) => {
+  const { sellerId } = req.params;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
-  const sellerId = req.params.id;
+  console.log("hello");
   const targetSeller = await Seller.findById(sellerId);
   if (!targetSeller) {
     const error = appError.create("Seller not found", 404, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  const { email, mobilePhone, newPassword, currentPassword } = req.body;
+
+  // Check if the provided email or mobilePhone already exists in the database
+  const existingSeller = await Seller.findOne({
+    $or: [{ email: email }, { mobilePhone: mobilePhone }],
+    _id: { $ne: sellerId }, // Exclude the current Seller from the check
+  });
+
+  if (existingSeller) {
+    const error = appError.create(
+      "Email or mobile phone already exists",
+      400,
+      httpStatusText.FAIL
+    );
     return next(error);
   }
 
@@ -233,15 +250,38 @@ const editSeller = asyncWrapper(async (req, res, next) => {
     options
   );
 
+  if (newPassword && currentPassword) {
+    const matchedPassword = await bcrypt.compare(
+      currentPassword,
+      targetSeller.password
+    );
+    if (!matchedPassword) {
+      const error = appError.create(
+        "current password is not correct ",
+        400,
+        httpStatusText.FAIL
+      );
+      return next(error);
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    updatedSeller.password = hashedNewPassword;
+  }
+
+  if (req?.file?.filename) {
+    console.log(req?.file);
+    updatedSeller.image = `uploads/${req?.file?.filename}`;
+  }
+  await updatedSeller.save();
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { seller: updatedSeller },
-    message: "Account updated successfully",
+    data: { seller: updatedSeller, message: "Profile updated successfully" },
   });
 });
 
 const getSellerProfile = asyncWrapper(async (req, res, next) => {
   const sellerId = req.current.id;
+
   const targetSeller = await Seller.findById(sellerId, {
     password: false,
   });
