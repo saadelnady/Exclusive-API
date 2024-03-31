@@ -57,7 +57,6 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
   newSeller.token = token;
 
   await newSeller.save();
-
   // const activationUrl = `${process.env.BAIS_URL}/activation/${newSeller.token}`;
 
   // await sendEmail({
@@ -68,7 +67,7 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newSeller.token },
+    data: { token: newSeller.token, role: newSeller?.role },
     message: `please cheack your email:-${newSeller.email} to activate your account`,
   });
 });
@@ -97,7 +96,7 @@ const sellerLogin = asyncWrapper(async (req, res, next) => {
     targetSeller.token = token;
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
-      data: { token: targetSeller.token },
+      data: { token: targetSeller.token, role: targetSeller.role },
       message: "logged in successfully",
     });
   } else {
@@ -275,7 +274,8 @@ const editSeller = asyncWrapper(async (req, res, next) => {
   await updatedSeller.save();
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { seller: updatedSeller, message: "Profile updated successfully" },
+    data: { seller: updatedSeller },
+    message: "Profile updated successfully",
   });
 });
 

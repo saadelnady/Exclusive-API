@@ -1,4 +1,9 @@
 const express = require("express");
+const Router = express.Router();
+const multer = require("multer");
+
+const { storage, fileFilter } = require("../utils/multer");
+const upload = multer({ storage: storage, fileFilter });
 
 const {
   getProducts,
@@ -7,23 +12,14 @@ const {
   editProduct,
   deleteProduct,
   getAcceptedSellerProducts,
-  getPendingProducts,
   acceptProduct,
   blockProduct,
   unblockProduct,
-  getBlockedProducts,
 } = require("../controller/product.controller");
 
 const allowedTo = require("../middlewares/alloewdTo");
-const { productValidation } = require("../middlewares/productValidation");
-const { storage, fileFilter } = require("../utils/multer");
-
-const multer = require("multer");
 const userRoles = require("../utils/user.roles");
-
-const upload = multer({ storage: storage, fileFilter });
-
-const Router = express.Router();
+const { productValidation } = require("../middlewares/productValidation");
 
 Router.route("/")
   .get(getProducts)

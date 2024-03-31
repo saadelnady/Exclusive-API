@@ -96,7 +96,8 @@ const editUser = asyncWrapper(async (req, res, next) => {
   await updatedUser.save();
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { user: updatedUser, message: "Profile updated successfully" },
+    data: { user: updatedUser },
+    message: "Profile updated successfully",
   });
 });
 
@@ -172,7 +173,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newUser.token },
+    data: { token: newUser.token, role: newUser.role },
     message: `please cheack your email:-${newUser.email} to activate your account`,
   });
 });
