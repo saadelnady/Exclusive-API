@@ -173,7 +173,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newUser.token, role: newUser.role },
+    data: { token: newUser.token },
     message: `please cheack your email:-${newUser.email} to activate your account`,
   });
 });
@@ -205,7 +205,7 @@ const userLogin = asyncWrapper(async (req, res, next) => {
 
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
-      data: { token: user.token, role: user.role },
+      data: { token: user.token },
       message: "logged in successfully",
     });
   } else {

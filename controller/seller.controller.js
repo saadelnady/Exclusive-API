@@ -67,7 +67,7 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newSeller.token, role: newSeller?.role },
+    data: { token: newSeller.token },
     message: `please cheack your email:-${newSeller.email} to activate your account`,
   });
 });
@@ -94,9 +94,10 @@ const sellerLogin = asyncWrapper(async (req, res, next) => {
       role: targetSeller.role,
     });
     targetSeller.token = token;
+    console.log("targetSeller", targetSeller);
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
-      data: { token: targetSeller.token, role: targetSeller.role },
+      data: { token: targetSeller.token },
       message: "logged in successfully",
     });
   } else {
