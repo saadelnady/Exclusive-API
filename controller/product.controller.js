@@ -5,17 +5,54 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const productStatus = require("../utils/productStatus");
 const Seller = require("../models/seller.model");
+const productRoles = require("../utils/productStatus");
 
 const getProducts = asyncWrapper(async (req, res, next) => {
   const { limit, page, text, status } = req.query;
   const regex = new RegExp(text, "i");
   const skip = (page - 1) * limit;
-  const products = await Product.find({ title: regex, status }, { __v: false })
+  const products = await Product.find(
+    { title: regex, status, isFlashSale: false },
+    { __v: false }
+  )
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
 
   const allProducts = await Product.find({ status }, { __v: false });
+
+  if (!products) {
+    const error = appError.create(
+      "No products to show",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  return res.status(200).json({
+    status: httpStatusText.SUCCESS,
+    data: { products, total: allProducts.length },
+  });
+});
+
+// =======================================================================================
+const getFlashSalesProducts = asyncWrapper(async (req, res, next) => {
+  const { limit, page, text } = req.query;
+  const regex = new RegExp(text, "i");
+  const skip = (page - 1) * limit;
+  const products = await Product.find(
+    { title: regex, status: productRoles.ACCEPTED, isFlashSale: true },
+    { __v: false }
+  )
+    .populate("productOwner")
+    .limit(limit)
+    .skip(skip);
+
+  const allProducts = await Product.find(
+    { status: productRoles.ACCEPTED, isFlashSale: true },
+    { __v: false }
+  );
 
   if (!products) {
     const error = appError.create(
@@ -99,6 +136,7 @@ const acceptProduct = asyncWrapper(async (req, res, next) => {
     message: "Product accepted successfully",
   });
 });
+// =======================================================================================
 
 const blockProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
@@ -136,6 +174,7 @@ const blockProduct = asyncWrapper(async (req, res, next) => {
     message: "Product Blocked successfully",
   });
 });
+// =======================================================================================
 
 const unblockProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
@@ -204,9 +243,7 @@ const getAcceptedSellerProducts = asyncWrapper(async (req, res, next) => {
     data: { products: sellerProducts, total: allSellerProducts.length },
   });
 });
-
 // =======================================================================================
-
 const addProduct = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -256,6 +293,7 @@ const addProduct = asyncWrapper(async (req, res, next) => {
     message: "Your product is under revision",
   });
 });
+// =======================================================================================
 
 const editProduct = asyncWrapper(async (req, res, next) => {
   const { productId } = req.params;
@@ -317,7 +355,7 @@ const editProduct = asyncWrapper(async (req, res, next) => {
     message: "Product updated successfully",
   });
 });
-
+// =======================================================================================
 const deleteProduct = asyncWrapper(async (req, res, next) => {
   const { productId } = req.params;
   const targetProduct = await Product.findById(productId);
@@ -354,6 +392,7 @@ const deleteProduct = asyncWrapper(async (req, res, next) => {
     message: "Product deleted successfully",
   });
 });
+// =======================================================================================
 
 module.exports = {
   getProducts,
@@ -364,6 +403,6 @@ module.exports = {
   acceptProduct,
   blockProduct,
   unblockProduct,
-
+  getFlashSalesProducts,
   getAcceptedSellerProducts,
 };
