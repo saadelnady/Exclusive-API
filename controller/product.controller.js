@@ -5,22 +5,27 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const productStatus = require("../utils/productStatus");
 const Seller = require("../models/seller.model");
-const productRoles = require("../utils/productStatus");
 
 const getProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text, status } = req.query;
+  const { limit, page, text, status, type } = req.query;
   const regex = new RegExp(text, "i");
   const skip = (page - 1) * limit;
-  const products = await Product.find(
-    { title: regex, status, isFlashSale: false },
-    { __v: false }
-  )
+  let query = { title: regex, status };
+
+  if (type === "FlashSale") {
+    query.isFlashSale = true;
+  }
+  if (type === "notFlashSale") {
+    query.isFlashSale = false;
+  }
+
+  const products = await Product.find(query, { __v: false })
     .populate("productOwner")
     .limit(limit)
     .skip(skip);
 
-  const allProducts = await Product.find({ status }, { __v: false });
-
+  const allProducts = await Product.find(query, { __v: false });
+  console.log("allProducts ===>", allProducts);
   if (!products) {
     const error = appError.create(
       "No products to show",
@@ -29,7 +34,6 @@ const getProducts = asyncWrapper(async (req, res, next) => {
     );
     return next(error);
   }
-
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
     data: { products, total: allProducts.length },
@@ -37,40 +41,6 @@ const getProducts = asyncWrapper(async (req, res, next) => {
 });
 
 // =======================================================================================
-const getFlashSalesProducts = asyncWrapper(async (req, res, next) => {
-  const { limit, page, text } = req.query;
-  const regex = new RegExp(text, "i");
-  const skip = (page - 1) * limit;
-  const products = await Product.find(
-    { title: regex, status: productRoles.ACCEPTED, isFlashSale: true },
-    { __v: false }
-  )
-    .populate("productOwner")
-    .limit(limit)
-    .skip(skip);
-
-  const allProducts = await Product.find(
-    { status: productRoles.ACCEPTED, isFlashSale: true },
-    { __v: false }
-  );
-
-  if (!products) {
-    const error = appError.create(
-      "No products to show",
-      400,
-      httpStatusText.FAIL
-    );
-    return next(error);
-  }
-
-  return res.status(200).json({
-    status: httpStatusText.SUCCESS,
-    data: { products, total: allProducts.length },
-  });
-});
-
-// =======================================================================================
-
 const getProduct = asyncWrapper(async (req, res, next) => {
   const productId = req.params.productId;
   const targetProduct = await Product.findById(productId)
@@ -403,6 +373,5 @@ module.exports = {
   acceptProduct,
   blockProduct,
   unblockProduct,
-  getFlashSalesProducts,
   getAcceptedSellerProducts,
 };

@@ -15,7 +15,6 @@ const {
   acceptProduct,
   blockProduct,
   unblockProduct,
-  getFlashSalesProducts,
 } = require("../controller/product.controller");
 
 const allowedTo = require("../middlewares/alloewdTo");
@@ -27,7 +26,6 @@ Router.route("/")
   .post(upload.array("images", 10), productValidation(), addProduct);
 
 Router.route("/acceptedSellerProducts").get(getAcceptedSellerProducts);
-Router.route("/flashSales").get(getFlashSalesProducts);
 
 Router.route("/:productId")
   .get(getProduct)
