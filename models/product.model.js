@@ -16,9 +16,9 @@ const productSchema = new mongoose.Schema(
         stockCount: { type: String, required: true },
         price: {
           priceBeforeDiscount: { type: String, required: true },
-          discountPercentage: { type: String, required: true },
+          discountPercentage: { type: String },
           finalPrice: { type: String, required: true },
-          discountValue: { type: String, required: true },
+          discountValue: { type: String },
         },
       },
     ],

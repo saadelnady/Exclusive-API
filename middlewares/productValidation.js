@@ -50,17 +50,17 @@ const productValidation = () => {
       .notEmpty()
       .withMessage("priceBeforeDiscount is required for all options"),
 
-    body("options.*.price.discountPercentage")
-      .notEmpty()
-      .withMessage("priceBeforeDiscount is required for all options"),
+    // body("options.*.price.discountPercentage")
+    //   .notEmpty()
+    //   .withMessage("priceBeforeDiscount is required for all options"),
 
     body("options.*.price.finalPrice")
       .notEmpty()
       .withMessage("finalPrice is required for all options"),
 
-    body("options.*.price.discountValue")
-      .notEmpty()
-      .withMessage("discountValue is required for all options"),
+    // body("options.*.price.discountValue")
+    //   .notEmpty()
+    //   .withMessage("discountValue is required for all options"),
   ];
 };
 

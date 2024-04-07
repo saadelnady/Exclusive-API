@@ -12,7 +12,7 @@ const getProducts = asyncWrapper(async (req, res, next) => {
   const skip = (page - 1) * limit;
   let query = { title: regex, status };
 
-  if (type === "FlashSale") {
+  if (type === "flashSale") {
     query.isFlashSale = true;
   }
   if (type === "notFlashSale") {
