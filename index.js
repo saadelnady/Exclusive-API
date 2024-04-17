@@ -1,4 +1,7 @@
-require("dotenv").config();
+if (process.env.NODE_ENV !== "PRODUCTION") {
+  require("dotenv").config();
+}
+
 const cors = require("cors");
 const path = require("path");
 
@@ -8,8 +11,11 @@ const productRouter = require("./routes/product.route");
 const sellerRouter = require("./routes/seller.route");
 const categoryRouter = require("./routes/category.route");
 const subCategoriesRouter = require("./routes/subCategory.route");
-const uploadRouter = require("./routes/upload");
+
+// const uploadRouter = require("./utils/upload");
 const express = require("express");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
 const app = express();
 
 const dbConnection = require("./db/dataBase");
@@ -17,6 +23,8 @@ const errorHandler = require("./middlewares/errorHandler");
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
 // to preview image
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

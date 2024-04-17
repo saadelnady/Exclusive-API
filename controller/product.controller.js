@@ -25,7 +25,6 @@ const getProducts = asyncWrapper(async (req, res, next) => {
     .skip(skip);
 
   const allProducts = await Product.find(query, { __v: false });
-  console.log("allProducts ===>", allProducts);
   if (!products) {
     const error = appError.create(
       "No products to show",
@@ -256,8 +255,7 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
   // Save the updated seller document
   await targetSeller.save();
-  console.log("targetSeller ====>", targetSeller);
-  return res.status(201).json({
+   return res.status(201).json({
     status: httpStatusText.SUCCESS,
     data: { product: newProduct },
     message: "Your product is under revision",

@@ -8,7 +8,6 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
-const productStatus = require("../utils/productStatus");
 
 const sellerRegister = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -57,13 +56,13 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
   newSeller.token = token;
 
   await newSeller.save();
-  // const activationUrl = `${process.env.BAIS_URL}/activation/${newSeller.token}`;
+  const activationUrl = `${process.env.BAIS_URL}/activation/${token}`;
 
-  // await sendEmail({
-  //   email: newSeller.email,
-  //   subject: "Activate your account",
-  //   message: `Hello ${newSeller.firstName} , please click on the link to activate your account ${activationUrl}`,
-  // });
+  await sendEmail({
+    email: newSeller.email,
+    subject: "Activate your account",
+    message: `Hello ${newSeller.firstName} , please click on the link to activate your account ${activationUrl}`,
+  });
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
@@ -94,7 +93,6 @@ const sellerLogin = asyncWrapper(async (req, res, next) => {
       role: targetSeller.role,
     });
     targetSeller.token = token;
-    console.log("targetSeller", targetSeller);
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
       data: { token: targetSeller.token },
@@ -218,7 +216,6 @@ const editSeller = asyncWrapper(async (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  console.log("hello");
   const targetSeller = await Seller.findById(sellerId);
   if (!targetSeller) {
     const error = appError.create("Seller not found", 404, httpStatusText.FAIL);
@@ -269,7 +266,6 @@ const editSeller = asyncWrapper(async (req, res, next) => {
   }
 
   if (req?.file?.filename) {
-    console.log(req?.file);
     updatedSeller.image = `uploads/${req?.file?.filename}`;
   }
   await updatedSeller.save();

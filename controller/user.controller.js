@@ -6,7 +6,9 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
-require("dotenv").config();
+const userRoles = require("../utils/user.roles");
+// const sendToken = require("../utils/sendToken");
+const fs = require("fs");
 
 const getAllUsers = asyncWrapper(async (req, res, next) => {
   const { limit, page } = req.query;
@@ -50,6 +52,16 @@ const editUser = asyncWrapper(async (req, res, next) => {
   });
 
   if (existingUser) {
+    const fileName = req?.file?.filename;
+    const filePath = `uploads/${fileName}`;
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.log("error ==>", err);
+        res.status(500).json({
+          message: "error deleting file",
+        });
+      }
+    });
     const error = appError.create(
       "Email or mobile phone already exists",
       400,
@@ -69,8 +81,6 @@ const editUser = asyncWrapper(async (req, res, next) => {
     },
     options
   );
-
-  console.log("req.body ====>", req.body);
 
   if (newPassword && currentPassword) {
     const matchedPassword = await bcrypt.compare(
@@ -102,8 +112,8 @@ const editUser = asyncWrapper(async (req, res, next) => {
 });
 
 const getUserProfile = asyncWrapper(async (req, res, next) => {
-  const currentId = req.current.id;
-  const targetUser = await User.findById(currentId, { password: false });
+  const token = req?.current?.token;
+  const targetUser = await User.findOne({ token: token });
   if (!targetUser) {
     const error = appError.create("user not found", 404, httpStatusText.FAIL);
     return next(error);
@@ -120,7 +130,7 @@ const userRegister = asyncWrapper(async (req, res, next) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { firstName, lastName, email, password, role, mobilePhone } = req.body;
+  const { firstName, lastName, email, password, mobilePhone } = req.body;
 
   const oldUser = await User.findOne({ email: email });
 
@@ -143,38 +153,29 @@ const userRegister = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   //genereate token
-
-  const newUser = new User({
+  const user = {
     firstName,
     lastName,
     email,
     mobilePhone,
-    password: hashedPassword,
-    role,
+    password,
+    role: userRoles.USER,
+  };
+  const token = generateToken(user);
+
+  const activationUrl = `${process.env.BAIS_URL}/activation/${token}`;
+
+  await sendEmail({
+    email: user.email,
+    subject: "Activate your account",
+    message: `Hello ${user.firstName}, please click on the link to activate your account: ${activationUrl}`,
   });
-  const token = generateToken({
-    id: newUser._id,
-    role: newUser.role,
-  });
-
-  newUser.token = token;
-  await newUser.save();
-
-  // const activationUrl = `${process.env.BAIS_URL}/activation/${newUser.token}`;
-
-  // await sendEmail({
-  //   email: newUser.email,
-  //   subject: "Activate your account",
-  //   message: `Hello ${newUser.firstName} , please click on the link to activate your account ${activationUrl}`,
-  // });
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newUser.token },
-    message: `please cheack your email:-${newUser.email} to activate your account`,
+    data: { token },
+    message: `please cheack your email:-${user.email} to activate your account`,
   });
 });
 
@@ -187,7 +188,7 @@ const userLogin = asyncWrapper(async (req, res, next) => {
 
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email: email });
+  const user = await User.findOne({ email });
 
   if (!user) {
     const error = appError.create("email not found", 500, httpStatusText.FAIL);
@@ -202,7 +203,8 @@ const userLogin = asyncWrapper(async (req, res, next) => {
     });
 
     user.token = token;
-
+    await user.save();
+    console.log("user ===>", user);
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
       data: { token: user.token },
@@ -239,8 +241,29 @@ const deleteUser = asyncWrapper(async (req, res, next) => {
 
 const activateUser = asyncWrapper(async (req, res, next) => {
   const { current } = req;
+  const hashedPassword = await bcrypt.hash(current.password, 10);
 
-  res.status(200).json({ current });
+  current.password = hashedPassword;
+  const oldUser = await User.findOne({ email: current.email });
+
+  const mobilePhoneExist = await User.findOne({
+    mobilePhone: current.mobilePhone,
+  });
+
+  if (mobilePhoneExist || oldUser) {
+    const error = appError.create(
+      "your account already activated ",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  const user = await User.create(current);
+
+  // sendToken(current, 201, res);
+
+  res.status(200).json({ data: { currentUser: user } });
 });
 
 module.exports = {
