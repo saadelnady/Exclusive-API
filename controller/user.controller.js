@@ -6,7 +6,7 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
-const userRoles = require("../utils/user.roles");
+const roles = require("../utils/roles");
 // const sendToken = require("../utils/sendToken");
 const fs = require("fs");
 
@@ -56,7 +56,6 @@ const editUser = asyncWrapper(async (req, res, next) => {
     const filePath = `uploads/${fileName}`;
     fs.unlink(filePath, (err) => {
       if (err) {
-        console.log("error ==>", err);
         res.status(500).json({
           message: "error deleting file",
         });
@@ -160,11 +159,11 @@ const userRegister = asyncWrapper(async (req, res, next) => {
     email,
     mobilePhone,
     password,
-    role: userRoles.USER,
+    role: roles.USER,
   };
   const token = generateToken(user);
 
-  const activationUrl = `${process.env.BAIS_URL}/activation/${token}`;
+  const activationUrl = `${process.env.BAIS_URL}/userActivation/${token}`;
 
   await sendEmail({
     email: user.email,
@@ -204,7 +203,6 @@ const userLogin = asyncWrapper(async (req, res, next) => {
 
     user.token = token;
     await user.save();
-    console.log("user ===>", user);
     return res.status(200).json({
       status: httpStatusText.SUCCESS,
       data: { token: user.token },

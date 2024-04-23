@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
-const userRoles = require("../utils/user.roles");
+const roles = require("../utils/roles");
 
 const sellerSchema = new mongoose.Schema(
   {
@@ -26,7 +26,7 @@ const sellerSchema = new mongoose.Schema(
       required: true,
     },
     token: { type: String },
-    role: { type: String, default: userRoles.SELLER },
+    role: { type: String, default: roles.SELLER },
     products: [{ type: mongoose.Types.ObjectId, ref: "Product" }],
   },
   {

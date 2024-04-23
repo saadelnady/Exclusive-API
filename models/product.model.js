@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const productRoles = require("../utils/productStatus");
+const productStatus = require("../utils/productStatus");
 
 const productSchema = new mongoose.Schema(
   {
@@ -13,22 +13,35 @@ const productSchema = new mongoose.Schema(
       {
         size: { type: String, required: true },
         color: { type: String, required: true },
-        stockCount: { type: String, required: true },
+        stockCount: {
+          type: Number,
+          required: [true, "Please enter your product stock count"],
+        },
         price: {
-          priceBeforeDiscount: { type: String, required: true },
-          discountPercentage: { type: String },
-          finalPrice: { type: String, required: true },
-          discountValue: { type: String },
+          priceBeforeDiscount: { type: Number, required: true },
+          discountPercentage: { type: Number, default: 0 },
+          discountValue: { type: Number, default: 0 },
+          finalPrice: { type: Number, required: true },
         },
       },
     ],
     status: {
       type: String,
-      enum: [productRoles.ACCEPTED, productRoles.BLOCKED, productRoles.PENDING],
-      default: "pending",
+      enum: [
+        productStatus.ACCEPTED,
+        productStatus.BLOCKED,
+        productStatus.PENDING,
+      ],
+      default: productStatus.PENDING,
     },
     isFlashSale: { type: Boolean, default: false },
-    flashSaleExpirationDate: { type: String },
+    flashSaleStatus: {
+      type: String,
+      enum: ["upcoming", "Running", "ended"],
+    },
+    flashSaleStartDate: { type: Date },
+    flashSaleEndDate: { type: Date },
+    soldOut: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -3,7 +3,8 @@ const httpStatusText = require("../utils/utils");
 
 module.exports = (...roles) => {
   return (req, res, next) => {
-    const currentUserRole = req.current.role;
+    const currentUserRole = req?.current?.role;
+    console.log("req?.current? ==>", req?.current?.role);
     if (!roles.includes(currentUserRole)) {
       const error = appError.create(
         "you aren't allowed to this",

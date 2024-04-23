@@ -221,16 +221,7 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
   const newProduct = new Product({ ...req.body });
 
-  // if ((!req?.files && req?.files?.length === 0) || req?.body?.images === "") {
-  //   const error = appError.create(
-  //     "You have to add one image at least to your product",
-  //     400,
-  //     httpStatusText.FAIL
-  //   );
-  //   return next(error);
-  // }
   if (req.files && req.files.length > 0) {
-    // Assuming each image's filename should be stored in an array field called 'images'
     newProduct.images = req.files.map((file) => `uploads/${file?.filename}`);
   }
   if (req.body.options && Array.isArray(req.body.options)) {
@@ -255,7 +246,7 @@ const addProduct = asyncWrapper(async (req, res, next) => {
 
   // Save the updated seller document
   await targetSeller.save();
-   return res.status(201).json({
+  return res.status(201).json({
     status: httpStatusText.SUCCESS,
     data: { product: newProduct },
     message: "Your product is under revision",

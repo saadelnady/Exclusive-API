@@ -14,7 +14,7 @@ const {
   loginValidation,
 } = require("../middlewares/authValidation");
 const verifyToken = require("../middlewares/verifyToken");
-const userRoles = require("../utils/user.roles");
+const roles = require("../utils/roles");
 const alloewdTo = require("../middlewares/alloewdTo");
 const {
   editProfileValidation,
@@ -26,7 +26,7 @@ const multer = require("multer");
 const { storage, fileFilter } = require("../utils/multer");
 const upload = multer({ storage: storage, fileFilter });
 
-router.route("/").get(verifyToken, alloewdTo(userRoles.ADMIN), getAllUsers);
+router.route("/").get(verifyToken, alloewdTo(roles.ADMIN), getAllUsers);
 router.route("/activation").post(verifyToken, activateUser);
 
 router

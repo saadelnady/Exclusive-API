@@ -18,8 +18,9 @@ const {
 } = require("../controller/product.controller");
 
 const allowedTo = require("../middlewares/alloewdTo");
-const userRoles = require("../utils/user.roles");
+const roles = require("../utils/roles");
 const { productValidation } = require("../middlewares/productValidation");
+const verifyToken = require("../middlewares/verifyToken");
 
 Router.route("/")
   .get(getProducts)
@@ -27,21 +28,35 @@ Router.route("/")
 
 Router.route("/acceptedSellerProducts").get(getAcceptedSellerProducts);
 
-Router.route("/:productId")
-  .get(getProduct)
-  .put(upload.array("images", 10), productValidation(), editProduct)
-  .delete(deleteProduct);
+Router.route("/:productId").get(getProduct);
+
+Router.route("/:productId").put(
+  verifyToken,
+  allowedTo(roles.SELLER),
+  upload.array("images", 10),
+  productValidation(),
+  editProduct
+);
+
+Router.route("/:productId").delete(
+  verifyToken,
+  allowedTo(roles.SELLER),
+  deleteProduct
+);
 
 Router.route("/acceptProduct/:productId").put(
-  // allowedTo(userRoles.ADMIN),
+  verifyToken,
+  allowedTo(roles.ADMIN),
   acceptProduct
 );
 Router.route("/blockProduct/:productId").put(
-  // allowedTo(userRoles.ADMIN),
+  verifyToken,
+  allowedTo(roles.ADMIN),
   blockProduct
 );
 Router.route("/unblockProduct/:productId").put(
-  // allowedTo(userRoles.ADMIN),
+  verifyToken,
+  allowedTo(roles.ADMIN),
   unblockProduct
 );
 module.exports = Router;

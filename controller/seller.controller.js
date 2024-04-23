@@ -1,6 +1,6 @@
 const { validationResult } = require("express-validator");
 const bcrypt = require("bcrypt");
-const productRoles = require("../utils/productStatus");
+const productStatus = require("../utils/productStatus");
 
 const asyncWrapper = require("../middlewares/asyncWrapper");
 const Seller = require("../models/seller.model");
@@ -8,6 +8,8 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 const generateToken = require("../utils/generateToken");
 const sendEmail = require("../utils/sendEmail");
+const roles = require("../utils/roles");
+const fs = require("fs");
 
 const sellerRegister = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
@@ -38,39 +40,57 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const newSeller = new Seller({
+  //genereate token
+  const seller = {
     firstName,
     lastName,
     email,
     mobilePhone,
-    password: hashedPassword,
-  });
+    password,
+    role: roles.SELLER,
+  };
+  const token = generateToken(seller);
 
-  const token = generateToken({
-    id: newSeller._id,
-    role: newSeller.role,
-  });
-
-  newSeller.token = token;
-
-  await newSeller.save();
-  const activationUrl = `${process.env.BAIS_URL}/activation/${token}`;
+  const activationUrl = `${process.env.BAIS_URL}/sellerActivation/${token}`;
 
   await sendEmail({
-    email: newSeller.email,
-    subject: "Activate your account",
-    message: `Hello ${newSeller.firstName} , please click on the link to activate your account ${activationUrl}`,
+    email: seller.email,
+    subject: "Activate your seller account",
+    message: `Hello ${seller.firstName}, please click on the link to activate your seller account: ${activationUrl}`,
   });
 
   return res.status(201).json({
     status: httpStatusText.SUCCESS,
-    data: { token: newSeller.token },
-    message: `please cheack your email:-${newSeller.email} to activate your account`,
+    data: { token },
+    message: `please cheack your email:-${seller.email} to activate your account`,
   });
 });
+const activateSeller = asyncWrapper(async (req, res, next) => {
+  const { current } = req;
+  const hashedPassword = await bcrypt.hash(current?.password, 10);
 
+  current.password = hashedPassword;
+  const oldSeller = await Seller.findOne({ email: current.email });
+
+  const mobilePhoneExist = await Seller.findOne({
+    mobilePhone: current.mobilePhone,
+  });
+
+  if (mobilePhoneExist || oldSeller) {
+    const error = appError.create(
+      "your account already activated ",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  const seller = await Seller.create(current);
+
+  // sendToken(current, 201, res);
+
+  res.status(200).json({ data: { currentSeller: seller } });
+});
 const sellerLogin = asyncWrapper(async (req, res, next) => {
   const errors = validationResult(req);
   const { email, password } = req.body;
@@ -132,9 +152,9 @@ const getSellerProducts = asyncWrapper(async (req, res, next) => {
   const { sellerId, status } = req.query;
 
   const targetStatus = [
-    productRoles.ACCEPTED,
-    productRoles.BLOCKED,
-    productRoles.PENDING,
+    productStatus.ACCEPTED,
+    productStatus.BLOCKED,
+    productStatus.PENDING,
   ].includes(status);
 
   const targetSeller = await Seller.findById(sellerId, {
@@ -231,6 +251,15 @@ const editSeller = asyncWrapper(async (req, res, next) => {
   });
 
   if (existingSeller) {
+    const fileName = req?.file?.filename;
+    const filePath = `uploads/${fileName}`;
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        res.status(500).json({
+          message: "error deleting file",
+        });
+      }
+    });
     const error = appError.create(
       "Email or mobile phone already exists",
       400,
@@ -306,4 +335,5 @@ module.exports = {
   deleteSeller,
   getSellerProfile,
   getSellerProducts,
+  activateSeller,
 };
