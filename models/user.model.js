@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     token: { type: String },
+    cart: [{ type: mongoose.Types.ObjectId, ref: "Cart" }],
     role: {
       type: String,
       enum: [roles.ADMIN, roles.USER],

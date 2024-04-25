@@ -65,6 +65,7 @@ const sellerRegister = asyncWrapper(async (req, res, next) => {
     message: `please cheack your email:-${seller.email} to activate your account`,
   });
 });
+
 const activateSeller = asyncWrapper(async (req, res, next) => {
   const { current } = req;
   const hashedPassword = await bcrypt.hash(current?.password, 10);

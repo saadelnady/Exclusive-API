@@ -23,6 +23,7 @@ const productSchema = new mongoose.Schema(
           discountValue: { type: Number, default: 0 },
           finalPrice: { type: Number, required: true },
         },
+        soldOut: { type: Number, default: 0 },
       },
     ],
     status: {
@@ -41,9 +42,15 @@ const productSchema = new mongoose.Schema(
     },
     flashSaleStartDate: { type: Date },
     flashSaleEndDate: { type: Date },
-    soldOut: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
+// Pre-save hook to set default value for flashSaleStatus
+productSchema.pre("save", function (next) {
+  if (this.isFlashSale && !this.flashSaleStatus) {
+    this.flashSaleStatus = "Running"; // Set default value if isFlashSale is true and flashSaleStatus is not set
+  }
+  next();
+});
 module.exports = mongoose.model("Product", productSchema);
