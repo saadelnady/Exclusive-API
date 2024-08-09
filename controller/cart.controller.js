@@ -5,11 +5,20 @@ const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
 
 const addToCart = asyncWrapper(async (req, res, next) => {
-  const { productId, quantity, size, color, userId } = req.body;
+  const { user, productId, optionId, selectedQuantity } = req.body;
 
-  // Fetch the product details from the database
+  if (!selectedQuantity || isNaN(selectedQuantity) || selectedQuantity <= 0) {
+    const error = appError.create("Invalid quantity", 400, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  let cart = await Cart.findOne({ user });
+
+  if (!cart) {
+    cart = new Cart({ user });
+  }
+
   const targetProduct = await Product.findById(productId);
-
   if (!targetProduct) {
     const error = appError.create(
       "Product not found",
@@ -19,79 +28,55 @@ const addToCart = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  // Check if the user already has a cart, if not, create a new cart
-  let cart = await Cart.findOne({ user: userId });
+  const targetOption = targetProduct.options.find(
+    (option) => option._id.toString() === optionId
+  );
 
-  if (!cart) {
-    cart = new Cart({ user: userId, items: [] });
+  if (!targetOption) {
+    const error = appError.create("Option not found", 400, httpStatusText.FAIL);
+    return next(error);
   }
 
-  // Check if there is an existing cart item with the same product ID but different color or size
-  const existingCartItemIndex = cart.items.findIndex(
+  const subTotal = selectedQuantity * targetOption.price.finalPrice;
+
+  const existingItemIndex = cart.products.findIndex(
     (item) =>
-      item.product.equals(productId) &&
-      (item.size !== size || item.color !== color)
+      item.product.toString() === productId &&
+      item.option._id.toString() === optionId
   );
 
-  if (existingCartItemIndex !== -1) {
-    // Add the new item as a separate entry in the cart
-    const totalPrice =
-      targetProduct.options.find(
-        (option) => option.size === size && option.color === color
-      ).price.finalPrice * quantity;
-
-    const cartItem = {
-      product: productId,
-      quantity,
-      totalPrice,
-      size,
-      color,
-    };
-
-    cart.items.push(cartItem);
+  if (existingItemIndex > -1) {
+    cart.products[existingItemIndex].selectedCount += selectedQuantity;
+    cart.products[existingItemIndex].subTotal += subTotal;
   } else {
-    // Check if the item already exists in the cart based on product, size, and color
-    const existingCartItem = cart.items.find(
-      (item) =>
-        item.product.equals(productId) &&
-        item.size === size &&
-        item.color === color
-    );
-
-    if (existingCartItem) {
-      // Update quantity if item already exists
-      existingCartItem.quantity += quantity;
-      existingCartItem.totalPrice += quantity * existingCartItem.price;
-    } else {
-      // Calculate the total price for the item
-      const totalPrice =
-        targetProduct.options.find(
-          (option) => option.size === size && option.color === color
-        ).price.finalPrice * quantity;
-
-      // Create a new cart item object
-      const cartItem = {
-        product: productId,
-        quantity,
-        totalPrice,
-        size,
-        color,
-      };
-
-      // Add the cart item to the cart
-      cart.items.push(cartItem);
-    }
+    cart.products.push({
+      product: productId,
+      option: targetOption,
+      selectedCount: selectedQuantity,
+      subTotal: subTotal,
+    });
   }
 
-  // Update total items and total price in the cart
-  cart.totalItems = cart.items.reduce(
-    (total, item) => total + item.quantity,
+  cart.totalPriceBeforeDiscount = cart.products.reduce(
+    (acc, item) =>
+      acc + item.option.price.priceBeforeDiscount * item.selectedCount,
     0
   );
-  cart.totalPrice = cart.items.reduce(
-    (total, item) => total + item.totalPrice,
-    0
-  );
+
+  cart.totalDiscount = cart.products.reduce((acc, item) => {
+    const discountPerItem =
+      item.option.price.priceBeforeDiscount - item.option.price.finalPrice;
+    const itemDiscount = discountPerItem * item.selectedCount;
+
+    // تأكد من أن الخصم قيمة صالحة
+    if (!isNaN(itemDiscount) && itemDiscount > 0) {
+      return acc + itemDiscount;
+    }
+    return acc;
+  }, 0);
+
+  cart.totalFinalPrice =
+    cart.totalPriceBeforeDiscount - (cart.totalDiscount || 0);
 
   await cart.save();
 
@@ -105,10 +90,17 @@ const addToCart = asyncWrapper(async (req, res, next) => {
 const getCart = asyncWrapper(async (req, res, next) => {
   const { userId } = req.query;
 
-  console.log("userId", userId);
-  // Fetch the user's cart and populate the items with product details
+  if (!userId) {
+    const error = appError.create(
+      "User ID is required",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
   const cart = await Cart.findOne({ user: userId }).populate({
-    path: "items.product",
+    path: "products.product",
     model: "Product",
   });
 
@@ -116,11 +108,13 @@ const getCart = asyncWrapper(async (req, res, next) => {
     const error = appError.create("Cart not found", 404, httpStatusText.FAIL);
     return next(error);
   }
+  cart.products.forEach((product) => {
+    console.log("product: " + product);
+  });
 
   res.status(200).json({
     status: httpStatusText.SUCCESS,
     data: { cart },
-    message: "Cart retrieved successfully",
   });
 });
 

@@ -37,9 +37,8 @@ app.use("/api/products", productRouter);
 app.use("/api/sellers", sellerRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/subCategories", subCategoriesRouter);
-app.use("/api/subCategories", subCategoriesRouter);
-app.use("/api/couponCode", couponCodeRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/couponCode", couponCodeRouter);
 
 // wild card
 app.all("*", (req, res, next) => {
