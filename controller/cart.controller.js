@@ -44,17 +44,39 @@ const addToCart = asyncWrapper(async (req, res, next) => {
       item.product.toString() === productId &&
       item.option._id.toString() === optionId
   );
-
+  // لو ال product موجود فى الcart
   if (existingItemIndex > -1) {
-    cart.products[existingItemIndex].selectedCount += selectedQuantity;
-    cart.products[existingItemIndex].subTotal += subTotal;
+    if (
+      cart.products[existingItemIndex].selectedCount + selectedQuantity >
+      cart.products[existingItemIndex].option.stockCount
+    ) {
+      const error = appError.create(
+        "you have reached the stock count",
+        400,
+        httpStatusText.FAIL
+      );
+      return next(error);
+    } else {
+      cart.products[existingItemIndex].selectedCount += selectedQuantity;
+      cart.products[existingItemIndex].subTotal += subTotal;
+    }
   } else {
-    cart.products.push({
-      product: productId,
-      option: targetOption,
-      selectedCount: selectedQuantity,
-      subTotal: subTotal,
-    });
+    // لو الproduct مش موجود فى الcart
+    if (selectedQuantity > targetOption.stockCount) {
+      const error = appError.create(
+        "you have reached the stock count",
+        400,
+        httpStatusText.FAIL
+      );
+      return next(error);
+    } else {
+      cart.products.push({
+        product: productId,
+        option: targetOption,
+        selectedCount: selectedQuantity,
+        subTotal: subTotal,
+      });
+    }
   }
 
   cart.totalPriceBeforeDiscount = cart.products.reduce(
@@ -76,7 +98,7 @@ const addToCart = asyncWrapper(async (req, res, next) => {
   }, 0);
 
   cart.totalFinalPrice =
-    cart.totalPriceBeforeDiscount - (cart.totalDiscount || 0);
+    cart.totalPriceBeforeDiscount - (cart.totalDiscount || 0) - cart.shipping;
 
   await cart.save();
 
@@ -99,17 +121,15 @@ const getCart = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const cart = await Cart.findOne({ user: userId }).populate({
-    path: "products.product",
-    model: "Product",
-  });
+  const targetCart = await Cart.findOne({ user: userId });
 
-  if (!cart) {
+  if (!targetCart) {
     const error = appError.create("Cart not found", 404, httpStatusText.FAIL);
     return next(error);
   }
-  cart.products.forEach((product) => {
-    console.log("product: " + product);
+  const cart = await targetCart.populate({
+    path: "products.product",
+    model: "Product",
   });
 
   res.status(200).json({
@@ -117,5 +137,57 @@ const getCart = asyncWrapper(async (req, res, next) => {
     data: { cart },
   });
 });
+// const editCart = asyncWrapper(async (req, res, next) => {
+//   const { userId } = req.query;
 
-module.exports = { addToCart, getCart };
+//   res.status(200).json({
+//     status: httpStatusText.SUCCESS,
+//     // data: { cart },
+//   });
+// });
+const deleteProductFromCart = asyncWrapper(async (req, res, next) => {
+  const { cartId, productId } = req.query;
+
+  console.log("cartId ===>", cartId);
+  console.log("productId ===>", productId);
+
+  // Find the cart by ID
+  const targetCart = await Cart.findById(cartId);
+  if (!targetCart) {
+    const error = appError.create("Cart not found", 400, httpStatusText.FAIL);
+    return next(error);
+  }
+
+  // Find the product in the cart's products array and remove it
+  const productIndex = targetCart.products.findIndex(
+    (product) => product._id.toString() === productId
+  );
+
+  if (productIndex === -1) {
+    const error = appError.create(
+      "Product not found in cart",
+      400,
+      httpStatusText.FAIL
+    );
+    return next(error);
+  }
+
+  // Remove the product from the cart
+  targetCart.products.splice(productIndex, 1);
+
+  // Save the updated cart
+  await targetCart.save();
+
+  res.status(201).json({
+    status: httpStatusText.SUCCESS,
+    message: "Product deleted successfully from your cart",
+    data: { productId },
+  });
+});
+
+module.exports = {
+  addToCart,
+  getCart,
+  //  editCart,
+  deleteProductFromCart,
+};
