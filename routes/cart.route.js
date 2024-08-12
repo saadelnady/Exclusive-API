@@ -15,6 +15,6 @@ Router.route("/addToCart").post(verifyToken, alloewdTo(roles.USER), addToCart);
 Router.route("/")
   .get(verifyToken, alloewdTo(roles.USER), getCart)
   // .put(editCart)
-  .delete(deleteProductFromCart);
+  .delete(verifyToken, alloewdTo(roles.USER), deleteProductFromCart);
 
 module.exports = Router;

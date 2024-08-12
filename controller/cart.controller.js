@@ -146,7 +146,7 @@ const getCart = asyncWrapper(async (req, res, next) => {
 //   });
 // });
 const deleteProductFromCart = asyncWrapper(async (req, res, next) => {
-  const { cartId, productId } = req.query;
+  const { cartId, productId } = req.body;
 
   console.log("cartId ===>", cartId);
   console.log("productId ===>", productId);
