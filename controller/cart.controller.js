@@ -3,6 +3,7 @@ const Cart = require("../models/cart.model");
 const Product = require("../models/product.model");
 const appError = require("../utils/appError");
 const httpStatusText = require("../utils/utils");
+const { calculateCartTotal } = require("../helpers/calculateCartTotal");
 
 const addToCart = asyncWrapper(async (req, res, next) => {
   const { user, productId, optionId, selectedQuantity } = req.body;
@@ -79,27 +80,7 @@ const addToCart = asyncWrapper(async (req, res, next) => {
     }
   }
 
-  cart.totalPriceBeforeDiscount = cart.products.reduce(
-    (acc, item) =>
-      acc + item.option.price.priceBeforeDiscount * item.selectedCount,
-    0
-  );
-
-  cart.totalDiscount = cart.products.reduce((acc, item) => {
-    const discountPerItem =
-      item.option.price.priceBeforeDiscount - item.option.price.finalPrice;
-    const itemDiscount = discountPerItem * item.selectedCount;
-
-    // تأكد من أن الخصم قيمة صالحة
-    if (!isNaN(itemDiscount) && itemDiscount > 0) {
-      return acc + itemDiscount;
-    }
-    return acc;
-  }, 0);
-
-  cart.totalFinalPrice =
-    cart.totalPriceBeforeDiscount - (cart.totalDiscount || 0) - cart.shipping;
-
+  calculateCartTotal(cart);
   await cart.save();
 
   res.status(201).json({
@@ -121,11 +102,10 @@ const getCart = asyncWrapper(async (req, res, next) => {
     return next(error);
   }
 
-  const targetCart = await Cart.findOne({ user: userId });
+  let targetCart = await Cart.findOne({ user: userId });
 
   if (!targetCart) {
-    const error = appError.create("Cart not found", 404, httpStatusText.FAIL);
-    return next(error);
+    targetCart = new Cart({ user: userId });
   }
   const cart = await targetCart.populate({
     path: "products.product",
@@ -146,7 +126,7 @@ const getCart = asyncWrapper(async (req, res, next) => {
 //   });
 // });
 const deleteProductFromCart = asyncWrapper(async (req, res, next) => {
-  const { cartId, productId } = req.body;
+  const { cartId, productId } = req.query;
 
   console.log("cartId ===>", cartId);
   console.log("productId ===>", productId);
@@ -175,13 +155,17 @@ const deleteProductFromCart = asyncWrapper(async (req, res, next) => {
   // Remove the product from the cart
   targetCart.products.splice(productIndex, 1);
 
+  calculateCartTotal(targetCart);
   // Save the updated cart
   await targetCart.save();
-
+  const cart = await targetCart.populate({
+    path: "products.product",
+    model: "Product",
+  });
   res.status(201).json({
     status: httpStatusText.SUCCESS,
     message: "Product deleted successfully from your cart",
-    data: { productId },
+    data: { cart },
   });
 });
 
