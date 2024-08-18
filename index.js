@@ -13,6 +13,7 @@ const categoryRouter = require("./routes/category.route");
 const subCategoriesRouter = require("./routes/subCategory.route");
 const couponCodeRouter = require("./routes/couponCode.route");
 const cartRouter = require("./routes/cart.route");
+const wishListRouter = require("./routes/wishListRouter.route.js");
 
 // const uploadRouter = require("./utils/upload");
 const express = require("express");
@@ -38,6 +39,7 @@ app.use("/api/sellers", sellerRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/subCategories", subCategoriesRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/wishList", wishListRouter);
 app.use("/api/couponCode", couponCodeRouter);
 
 // wild card
