@@ -69,7 +69,10 @@ app.all("*", (req, res, next) => {
 // handle errors
 app.use(errorHandler);
 // server running
-app.listen(process.env.PORT, () => {
-  console.log("server is listening on port ", process.env.PORT);
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  console.log("Server is listening on port", PORT);
 });
+
 dbConnection();
